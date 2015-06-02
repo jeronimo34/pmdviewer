@@ -32,6 +32,19 @@ CVmdLoader::CVmdLoader(const char* filename){
 
     vmdMotions[i] = v;
   }
+
+  //表情データ
+  DWORD morphsize = 0;
+  ifs.read((char*)&morphsize, sizeof(DWORD));
+  m_vmdMorphs.resize(morphsize);
+  
+  for(size_t i = 0; i < m_vmdMorphs.size(); ++i){
+    VmdMorph v;
+    ifs.read((char*)&v.skinName, 15);
+    ifs.read((char*)&v.flameNo, sizeof(DWORD));
+    ifs.read((char*)&v.weight, sizeof(float));
+  }
+  
   ifs.close();
 }
 
@@ -39,6 +52,9 @@ CVmdLoader::CVmdLoader(const char* filename){
 CVmdLoader::~CVmdLoader() {
   while(!vmdMotions.empty())
     vmdMotions.pop_back();
+
+  while(!m_vmdMorphs.empty())
+    m_vmdMorphs.pop_back();
 }
 
   VmdHeader CVmdLoader::GetHeader() {

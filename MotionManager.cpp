@@ -29,7 +29,7 @@ CMatrix4* CMotionManager::getAttribute(int motionid, float frame
 
     if(m_Bonemap.find(s) != m_Bonemap.end()){
       //      cout << "name : " << s << endl;
-    //boneNameがモーションの中にある
+      //boneNameがモーションの中にある
       p = 0; n = 0; 
       vector< pair<int, int> >& v=m_Bonemap[s];
       for(int j = 0; j < (int)v.size()-1; ++j){
@@ -165,6 +165,10 @@ static bool convFlame(const VmdMotion& a, const VmdMotion &b){
   return a.flameNo < b.flameNo;
 }
 
+static bool convFlameMorph(const VmdMorph &a, const VmdMorph &b){
+  return a.flameNo < b.flameNo;
+}
+
 //vmd motion no touroku
 void CMotionManager::registVMDMotion(CVmdLoader *loader){
 
@@ -178,6 +182,29 @@ void CMotionManager::registVMDMotion(CVmdLoader *loader){
     m_Bonemap[m[i].boneName].push_back( pair<int,int>(m[i].flameNo, i));
     m_lastframe = max(m_lastframe, m[i].flameNo);    
   }
+
+  //表情データ
+  map< int, vector<VmdMorph> > m_Morphs;
+  m_Morphs[m_motionNum] = loader->GetMorphs();
+  vector<VmdMorph>& mm = m_Morphs[m_motionNum];
+
+  struct MorphInfo{
+    int flameNo;
+    int morphpos;
+    float weight;
+  };
+
+  map<string, vector<MorphInfo> >m_MorphMap;
+  sort(mm.begin(), mm.end(), convFlameMorph);  
+  for(size_t i = 0; i < mm.size(); ++i){
+    MorphInfo mi;
+    mi.flameNo = mm[i].flameNo;
+    mi.morphpos = i;
+    mi.weight = mm[i].weight;
+    m_MorphMap[mm[i].skinName].push_back(mi);
+  }
+
+  
   m_motionNum++;
 }
 

@@ -155,12 +155,35 @@ CPMDLoader::CPMDLoader(const char* fname)
     ifs.read((char*)&m->control_weight, sizeof(float));
     //new siteruyo
 
-    cout << "iteration : " << (int)m->ik_chain_length << endl;
     m->ik_child_bone_index = new WORD[m->ik_chain_length];
     for(int j = 0; j < m->ik_chain_length; ++j){
       ifs.read((char*)&m->ik_child_bone_index[j], sizeof(WORD));
     }
   }
+
+  //表情リスト
+  ifs.read((char*)&m_skinNum, sizeof(WORD));
+  m_pMorph = new MmdStruct::PmdMorph[m_skinNum];
+  
+  for(int i = 0; i < m_skinNum; ++i){
+    MmdStruct::PmdMorph *m = &m_pMorph[i];
+    ifs.read(m->skin_name, 20);
+    cout << m->skin_name << endl;
+
+    ifs.read((char*)&m->skin_vert_count, sizeof(DWORD));
+    ifs.read((char*)&m->skin_type, sizeof(BYTE));
+    
+    m->skin_data = new MmdStruct::PmdSkinVertData[m->skin_vert_count];
+    for(int j = 0; j < m->skin_vert_count; ++j){
+      MmdStruct::PmdSkinVertData *mm = &m->skin_data[j];
+      ifs.read((char*)&mm->skin_vert_index,sizeof(DWORD));
+      ifs.read((char*)&mm->skin_vert_pos[0],sizeof(float)*3);
+      //openglは右
+      mm->skin_vert_pos[0] *= -1.0;
+      mm->skin_vert_pos[2] *= -1.0;
+    }
+  }
+  
   ifs.close();
 }
 
@@ -173,5 +196,9 @@ CPMDLoader::~CPMDLoader(){
     SAFE_DELETE_ARRAY(m_pIK[i].ik_child_bone_index);
   }
   SAFE_DELETE_ARRAY(m_pIK);
+  for(WORD i = 0; i < m_skinNum; ++i){
+    SAFE_DELETE_ARRAY(m_pMorph[i].skin_data);
+  }
+  SAFE_DELETE_ARRAY(m_pMorph);
 }
 

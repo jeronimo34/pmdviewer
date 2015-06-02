@@ -3,6 +3,7 @@
 #include "constant.h"
 #include "MotionManager.h"
 
+#include <string.h>
 #include <iostream>
 using namespace std;
 
@@ -34,12 +35,18 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
   //copy ik
   m_ikNum = loader->getIKNum();
   copyPmdIK(&m_pIK, loader->getPmdIK());
-
   cout << "copy ik" << endl;
+
+  //copy pmd morph
+  m_morphNum = loader->getMorphNum();
+  cout << "morphNum : " << m_morphNum << endl;
+  copyPmdMorph(&m_pmdMorph, loader->getPmdMorph());
+  cout << "copy morph" << endl;
+  /*
   for(int i = 0; i < m_ikNum; ++i){
     cout << m_pIK[i].ik_bone_index << endl;
   }
-  
+  */
   //boneの作成
   struct searchNullSibling{
     static void run(Bone* child, Bone* newBone){
@@ -91,7 +98,7 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
     m_pB[i].type = m_pBone[i].bone_type;
     m_pB[i].combMatAry = m_pCombMat;
     memcpy(m_pB[i].boneName, m_pBone[i].bone_name, 15);
-    m_pB[i].boneName[15] = '\0';
+    //    m_pB[i].boneName[15] = '\0';
     //ローカル座標を原点へ移動させる行列
     m_pB[i].offsetMat = m_pB[i].initMat.inverse();
   }
@@ -111,15 +118,51 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
   };
   CalcRelativeMat::run(&m_pB[0], 0);
 
+  //ローカル姿勢にする。
+  for(int i = 0; i < m_boneNum; ++i){
+    m_pB[i].boneMat = m_pB[i].initMat;
+  }
+
   //shader
   CGLSL prog;
   m_skinshader = prog.makeProgram("simple.vert", "simple.frag");
   m_uniform_defMat = glGetUniformLocation(m_skinshader,"defMat");
-      m_attribute_boneNo = glGetAttribLocation(m_skinshader, "boneNo");
+  m_attribute_boneNo = glGetAttribLocation(m_skinshader, "boneNo");
   m_attribute_boneWeight = glGetAttribLocation(m_skinshader, "boneW");
 
   //debug
   glUseProgram(0);
+
+
+  //WAKAME☆
+  //morph test
+  for(int i = 0; i < m_morphNum; ++i){
+    //    cout << "\n" << i << " "<< m_pmdMorph[i].skin_name << endl;
+    if(i == 15){
+      //お　という。
+    cout << i << " " << m_pmdMorph[i].skin_vert_count << endl;
+      for(int j = 0; j < m_pmdMorph[i].skin_vert_count; ++j){
+	int index = m_pmdMorph[i].skin_data[j].skin_vert_index;
+	cout << "index : "<< index << endl;
+	m_pVertex[index].pos[0] += m_pmdMorph[i].skin_data[j].skin_vert_pos[0];
+	m_pVertex[index].pos[1] += m_pmdMorph[i].skin_data[j].skin_vert_pos[1];
+	m_pVertex[index].pos[2] += m_pmdMorph[i].skin_data[j].skin_vert_pos[2];
+
+	m_v.push_back(
+		      CVector3(m_pVertex[index].pos[0],
+			       m_pVertex[index].pos[1],
+			       m_pVertex[index].pos[2]
+			       )
+		      );
+
+	cout << m_pmdMorph[i].skin_data[j].skin_vert_pos[0] << " "
+	     << m_pmdMorph[i].skin_data[j].skin_vert_pos[1] << " "
+	     << m_pmdMorph[i].skin_data[j].skin_vert_pos[2] << endl;
+      }
+    }
+  }
+
+
 }
 
 //debug
@@ -141,7 +184,6 @@ void CPmdMesh::copyPmdIK(MmdStruct::PmdIK **out, const MmdStruct::PmdIK* in){
   *out = new MmdStruct::PmdIK[m_ikNum];
   for(WORD i = 0; i < m_ikNum; ++i){
     (*out)[i].ik_bone_index = in[i].ik_bone_index;
-
     (*out)[i].ik_target_bone_index = in[i].ik_target_bone_index;
     (*out)[i].ik_chain_length = in[i].ik_chain_length;
     (*out)[i].iterations = in[i].iterations;
@@ -151,6 +193,28 @@ void CPmdMesh::copyPmdIK(MmdStruct::PmdIK **out, const MmdStruct::PmdIK* in){
     
     for(int j = 0; j  < in[i].ik_chain_length; ++j){
       (*out)[i].ik_child_bone_index[j] = in[i].ik_child_bone_index[j];
+    }
+  }
+}
+//
+//copyPmdMorph
+//
+void CPmdMesh::copyPmdMorph(MmdStruct::PmdMorph **out, const MmdStruct::PmdMorph *in){
+
+  *out = new MmdStruct::PmdMorph[m_morphNum];
+  for(DWORD i = 0; i < m_morphNum; ++i){
+    memcpy((*out)[i].skin_name, in[i].skin_name, 15);
+    (*out)[i].skin_vert_count = in[i].skin_vert_count;
+    (*out)[i].skin_type = in[i].skin_type;
+    (*out)[i].skin_data = new MmdStruct::PmdSkinVertData[in[i].skin_vert_count];
+
+    cout << "skin vert count : " << in[i].skin_vert_count << endl;
+    for(DWORD j = 0; j < in[i].skin_vert_count; ++j){
+
+      (*out)[i].skin_data[j].skin_vert_index =  in[i].skin_data[j].skin_vert_index;
+      (*out)[i].skin_data[j].skin_vert_pos[0] = in[i].skin_data[j].skin_vert_pos[0];
+      (*out)[i].skin_data[j].skin_vert_pos[1] = in[i].skin_data[j].skin_vert_pos[1];
+      (*out)[i].skin_data[j].skin_vert_pos[2] = in[i].skin_data[j].skin_vert_pos[2];
     }
   }
 }
@@ -167,6 +231,11 @@ CPmdMesh::~CPmdMesh(){
     SAFE_DELETE_ARRAY(m_pIK[i].ik_child_bone_index);
   }
   SAFE_DELETE_ARRAY(m_pIK);
+  for(int i = 0; i < m_morphNum; ++i){
+    SAFE_DELETE_ARRAY(m_pmdMorph[i].skin_data);
+  }
+  SAFE_DELETE_ARRAY(m_pmdMorph);
+  
   SAFE_DELETE_ARRAY(m_pB);
   SAFE_DELETE_ARRAY(m_pCombMat);
   SAFE_DELETE_ARRAY(m_pDefMat);
@@ -180,11 +249,21 @@ void CPmdMesh::AnimationUpdate(float dt){
 
   CMotionManager& inst = CMotionManager::instance();
   //現在の姿勢に更新
-  inst.getAttribute(0, m_flame, *this);
+  //  inst.getAttribute(0, m_flame, *this);
+#if 0
+  for(int i = 0; i < m_morphNum; ++i){
+    if(m_pmdMorph[i].skin_type == 0){
+      for(int j = 0; j < m_pmdMorph[i].skin_vert_count; ++j){
+
+      }
+    }
+  }
+#endif
   for(int i = 0; i < m_boneNum; ++i){
+    //    m_pB[i].boneMat = m_pB[i].initMat * m_pDefMat[i];
     m_pB[i].boneMat = m_pB[i].initMat * m_pDefMat[i];
   }
-  inst.getAttributeIK(*this);
+  //  inst.getAttributeIK(*this);
 
 }
 
@@ -193,10 +272,10 @@ void CPmdMesh::render(){
   static double angle = 0.0f;
   //3 tyouten
   //float 
-  angle += 1.0;
+  //  angle += 1.0;
   //  cout << angle << endl;
   //  glTranslatef(0, 0, -10);
-  glRotated(0, 0, 1, 0);
+  //glRotated(angle, 0, 1, 0);
   //  glMultMatrixd(Mat4RotatedX(angle).m);
   //  CMotionManager& inst = CMotionManager::instance();
   //  if(angle >= 40)angle = 0;
@@ -276,7 +355,7 @@ void CPmdMesh::render(){
         glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, m[i].mirror_color);
 
     size = m[i].face_vert_count;
-        glDrawElements(GL_TRIANGLES, size , GL_UNSIGNED_SHORT, &m_pIndex[from]);
+    glDrawElements(GL_TRIANGLES, size , GL_UNSIGNED_SHORT, &m_pIndex[from]);
     from += size ;
   }
 
@@ -303,13 +382,13 @@ void CPmdMesh::render(){
   int index = 0;
   float red[] = {1,0,0,1};
   float blue[] = {0,0,1,1};
-
+#if 0
   for(int i = 0; i < m_boneNum; ++i){
     index = m_pBone[i].tail_pos_bone_index;
     if(index != 0){
 
       glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,red);
-      glPointSize(5.0);
+      //      glPointSize(5.0);
 
       glColor3f(1,0,0);
       glBegin(GL_POINTS);
@@ -318,25 +397,20 @@ void CPmdMesh::render(){
 		 m_pBone[i].bone_head_pos[2]
 		 );
       glEnd();
-
-      /*
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,blue);
-      glColor3f(0,1,0);
-      glBegin(GL_POINTS);
-      glVertex3f(m_pBone[index].bone_head_pos[0],
-		 m_pBone[index].bone_head_pos[1],
-		 m_pBone[index].bone_head_pos[2]
-		 );
-      glEnd();
-      */
     }
   }
-  /*
-  glBegin(GL_TRIANGLES);
-  for(DWORD i = 0; i < m_idxNum; ++i){
-    glVertex3fv(m_pVertex[m_pIndex[i]].pos);
+#endif 
+  for(int i = 0; i < m_v.size(); ++i){
+      glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,red);
+      //      glPointSize(5.0);
+      glColor3f(1,0,0);
+      glBegin(GL_POINTS);
+      glVertex3f(m_v[i].x,
+		 m_v[i].y,
+		 m_v[i].z);
+
+      glEnd();
   }
-  glEnd();
-  */
+
 }
 

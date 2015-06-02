@@ -19,17 +19,27 @@ struct VmdMotion {
   BYTE interpolation[64];
 };
 
+struct VmdMorph{
+  char skinName[15];
+  DWORD flameNo;
+  float weight;
+};
 #pragma pack(pop)
 
 class CVmdLoader{
  private:
   VmdHeader vmdHeader;
   vector<VmdMotion> vmdMotions;
+  vector<VmdMorph> m_vmdMorphs;
  public:
   CVmdLoader(const char* filename);
   virtual ~CVmdLoader();
   VmdHeader GetHeader();
   vector<VmdMotion> GetMotions() const;
+
+  vector<VmdMorph> GetMorphs() const {
+    return m_vmdMorphs;
+  }
 };
 
 

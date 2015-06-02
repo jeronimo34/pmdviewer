@@ -8,6 +8,9 @@
 #include "../VECTOR3/vector3.h"
 
 #include <map>
+#include <vector>
+
+using namespace std;
 
 const char SKINMESH_VERT[] = "skinmesh.vert";
 const char SKINMESH_FRAG[] = "skinmesh.frag";
@@ -74,6 +77,11 @@ class CPmdMesh : public CMesh{
 
   void copyPmdIK(MmdStruct::PmdIK **out, const MmdStruct::PmdIK *in);
 
+  //morph
+  DWORD m_morphNum;
+  MmdStruct::PmdMorph *m_pmdMorph;
+  void copyPmdMorph(MmdStruct::PmdMorph **out, const MmdStruct::PmdMorph *in);
+
   //skinmesh
   Bone *m_pB;//bone
   CMatrix4 *m_pCombMat;
@@ -93,6 +101,10 @@ class CPmdMesh : public CMesh{
   bool m_repeat;
   float m_dt;
   bool m_animation;
+
+  //debug
+  vector<CVector3> m_v;
+
  public:
 
   CPmdMesh(CPMDLoader* loader);

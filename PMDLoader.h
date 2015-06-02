@@ -50,6 +50,18 @@ namespace MmdStruct{
     float control_weight; // 演算1回あたりの制限角度 // IK値2
     WORD *ik_child_bone_index; // IK影響下のボーン番号
   };
+  struct PmdSkinVertData{
+    DWORD skin_vert_index;
+    float skin_vert_pos[3];
+  };
+
+  struct PmdMorph{
+    char skin_name[20]; //　表情名
+    DWORD skin_vert_count; // 表情用の頂点数
+    BYTE skin_type; // 表情の種類 // 0：base、1：まゆ、2：目、3：リップ、4：その他
+    PmdSkinVertData *skin_data;
+  };
+
   #pragma pack()
 }
 
@@ -72,6 +84,11 @@ class CPMDLoader{
 
   WORD m_ikNum; // IKデータ数
   MmdStruct::PmdIK *m_pIK;
+
+  //表情リスト
+  WORD m_skinNum;
+  MmdStruct::PmdMorph *m_pMorph;
+
  public:
   CPMDLoader(const char* fname);
   ~CPMDLoader();
@@ -98,12 +115,15 @@ class CPMDLoader{
   WORD getIKNum() const {
     return m_ikNum;
   }
-  /*
-  void getPmdIK(MmdStruct::PmdIK *out){
-  }
-  */
   MmdStruct::PmdIK *getPmdIK() const {
     return m_pIK;
   }
-
+  
+  WORD getMorphNum() const {
+    return m_skinNum;
+  }
+  
+  MmdStruct::PmdMorph *getPmdMorph() const {
+    return m_pMorph;
+  }
 };

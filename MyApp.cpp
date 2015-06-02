@@ -17,13 +17,13 @@ CMyApp::CMyApp(){
   #endif
 
   CPMDLoader *pmdloader = new CPMDLoader("../resource/cirno.pmd");
-  CVmdLoader *vmdloader = new CVmdLoader("run.vmd");
+  CVmdLoader *vmdloader = new CVmdLoader("nya.vmd");
 
   CMotionManager& inst = CMotionManager::instance();
   inst.registVMDMotion(vmdloader);
   m_pmdMesh = new CPmdMesh(pmdloader);
 
-  m_pmdMesh->SetAnimationSpeed(0.1);
+  m_pmdMesh->SetAnimationSpeed(0.5);
   m_pmdMesh->AnimationStart();
 
   //  inst.getAttribute(0,40,*m_pmdMesh);
