@@ -1,0 +1,342 @@
+#include "glsl.h"
+#include "PmdMesh.h"
+#include "constant.h"
+#include "MotionManager.h"
+
+#include <iostream>
+using namespace std;
+
+CPmdMesh::CPmdMesh(CPMDLoader* loader){
+  m_vertexNum = loader->getVertexNum();
+  m_pVertex = new MmdStruct::PmdVertex[m_vertexNum];
+  loader->getPmdVertex(m_pVertex);
+  cout << "copy vertex" << endl;
+  
+  m_idxNum = loader->getFaceNum();
+  m_pIndex = new WORD[m_idxNum];
+  loader->getFaceIndex(m_pIndex);
+  cout << "copy face" << endl;
+  
+  m_materialNum = loader->getMaterialNum();
+  m_pMaterial = new MmdStruct::PmdMaterial[m_materialNum];
+  loader->getPmdMaterial(m_pMaterial);
+  cout << "copy material" << endl;
+
+  //copy bone
+  m_boneNum = loader->getBoneNum();
+  m_pBone = new MmdStruct::PmdBone[m_boneNum];
+  loader->getPmdBone(m_pBone);
+  cout << "copy bone" << endl;
+
+  //defMat
+  m_pDefMat = new CMatrix4[m_boneNum];
+
+  //copy ik
+  m_ikNum = loader->getIKNum();
+  copyPmdIK(&m_pIK, loader->getPmdIK());
+
+  cout << "copy ik" << endl;
+  for(int i = 0; i < m_ikNum; ++i){
+    cout << m_pIK[i].ik_bone_index << endl;
+  }
+  
+  //boneの作成
+  struct searchNullSibling{
+    static void run(Bone* child, Bone* newBone){
+      if (child->sibling)
+	run(child->sibling, newBone);
+      else
+	child->sibling = newBone;
+    }
+  };
+
+
+  m_pB = new Bone[m_boneNum];
+
+  WORD index = 0;
+  //No.0 parent is NULL
+
+  for(DWORD i = 1; i < m_boneNum; ++i){
+    //親がいなかったら0番を親にする。
+    if(m_pBone[i].parent_bone_index == 0xFFFF){
+      index = 0;
+    }
+    else {
+      index = m_pBone[i].parent_bone_index;
+    }
+
+    //oyano settei
+    m_pB[i].parent = &m_pB[index];
+
+    if(m_pB[index].firstChild == NULL){
+      //first child
+      m_pB[index].firstChild = &m_pB[i];
+    }
+    else {
+      searchNullSibling::run(m_pB[index].firstChild, &m_pB[i]);
+    }
+  }
+
+  //ボーンのローカル座標を求める。
+  //i == 0は原点とする?
+  for(WORD i = 1; i < m_boneNum; ++i){
+    m_pB[i].initMat = Mat4Translated(m_pBone[i].bone_head_pos[0],
+				     m_pBone[i].bone_head_pos[1],
+				     m_pBone[i].bone_head_pos[2]);//.transpose();
+  }
+
+  m_pCombMat = new CMatrix4[m_boneNum];
+  for(WORD i = 0; i < m_boneNum; ++i){
+    m_pB[i].id = i;
+    m_pB[i].type = m_pBone[i].bone_type;
+    m_pB[i].combMatAry = m_pCombMat;
+    memcpy(m_pB[i].boneName, m_pBone[i].bone_name, 15);
+    m_pB[i].boneName[15] = '\0';
+    //ローカル座標を原点へ移動させる行列
+    m_pB[i].offsetMat = m_pB[i].initMat.inverse();
+  }
+
+
+  // 初期姿勢を親の姿勢からの相対姿勢に直します。
+  // まず子の末端まで下りて、自分のローカル空間での初期姿勢 × 親のボーンオフセット行列で相対姿勢が出ます
+  struct CalcRelativeMat {
+    static void run(Bone* me, CMatrix4 *parentoffsetMat) {
+      if (me->firstChild)
+	run(me->firstChild, &me->offsetMat);
+      if (me->sibling)
+	run(me->sibling, parentoffsetMat);
+      if (parentoffsetMat)
+	me->initMat =   (*parentoffsetMat) * me->initMat;//koko
+    }
+  };
+  CalcRelativeMat::run(&m_pB[0], 0);
+
+  //shader
+  CGLSL prog;
+  m_skinshader = prog.makeProgram("simple.vert", "simple.frag");
+  m_uniform_defMat = glGetUniformLocation(m_skinshader,"defMat");
+      m_attribute_boneNo = glGetAttribLocation(m_skinshader, "boneNo");
+  m_attribute_boneWeight = glGetAttribLocation(m_skinshader, "boneW");
+
+  //debug
+  glUseProgram(0);
+}
+
+//debug
+//print
+void print(CMatrix4* m){
+  for(int i = 0; i < 4; ++i){
+    for(int j = 0; j < 4; ++j){
+    cout << m->m[j * 4 + i] << " ";
+    }
+  }
+  cout << " initmat" << endl;
+}
+
+//
+//copyPmdIK
+//
+void CPmdMesh::copyPmdIK(MmdStruct::PmdIK **out, const MmdStruct::PmdIK* in){
+
+  *out = new MmdStruct::PmdIK[m_ikNum];
+  for(WORD i = 0; i < m_ikNum; ++i){
+    (*out)[i].ik_bone_index = in[i].ik_bone_index;
+
+    (*out)[i].ik_target_bone_index = in[i].ik_target_bone_index;
+    (*out)[i].ik_chain_length = in[i].ik_chain_length;
+    (*out)[i].iterations = in[i].iterations;
+    (*out)[i].control_weight = in[i].control_weight;
+    //NEW
+    (*out)[i].ik_child_bone_index = new WORD[in[i].ik_chain_length];
+    
+    for(int j = 0; j  < in[i].ik_chain_length; ++j){
+      (*out)[i].ik_child_bone_index[j] = in[i].ik_child_bone_index[j];
+    }
+  }
+}
+
+//
+//destractor
+//
+CPmdMesh::~CPmdMesh(){
+  SAFE_DELETE_ARRAY(m_pVertex);
+  SAFE_DELETE_ARRAY(m_pIndex);
+  SAFE_DELETE_ARRAY(m_pMaterial);
+  SAFE_DELETE_ARRAY(m_pBone);
+  for(int i = 0; i < m_ikNum; ++i){
+    SAFE_DELETE_ARRAY(m_pIK[i].ik_child_bone_index);
+  }
+  SAFE_DELETE_ARRAY(m_pIK);
+  SAFE_DELETE_ARRAY(m_pB);
+  SAFE_DELETE_ARRAY(m_pCombMat);
+  SAFE_DELETE_ARRAY(m_pDefMat);
+}
+
+void CPmdMesh::AnimationUpdate(float dt){
+
+  if(m_animation){
+    m_flame += m_dt;
+  }
+
+  CMotionManager& inst = CMotionManager::instance();
+  //現在の姿勢に更新
+  inst.getAttribute(0, m_flame, *this);
+  for(int i = 0; i < m_boneNum; ++i){
+    m_pB[i].boneMat = m_pB[i].initMat * m_pDefMat[i];
+  }
+  inst.getAttributeIK(*this);
+
+}
+
+void CPmdMesh::render(){
+
+  static double angle = 0.0f;
+  //3 tyouten
+  //float 
+  angle += 1.0;
+  //  cout << angle << endl;
+  //  glTranslatef(0, 0, -10);
+  glRotated(0, 0, 1, 0);
+  //  glMultMatrixd(Mat4RotatedX(angle).m);
+  //  CMotionManager& inst = CMotionManager::instance();
+  //  if(angle >= 40)angle = 0;
+
+
+  static double pp = PI/180.0;
+
+  //worldviewprojを取得
+  CMatrix4 world;
+
+  //animation
+  AnimationUpdate(0);
+
+
+  //  world = Mat4RotatedY(angle);
+  struct UpdateBone {
+    static void run(Bone* me, CMatrix4 *parentWorldMat) {
+      // count++;
+      me->boneMat = (*parentWorldMat) * me->boneMat;//koko 
+      me->combMatAry[me->id] =  me->boneMat * me->offsetMat;//koko
+      if (me->firstChild)
+	run(me->firstChild, &me->boneMat);
+      if (me->sibling)
+	run(me->sibling, parentWorldMat);
+    };
+  };
+  UpdateBone::run(m_pB, &world);
+
+  //
+  //shader begin
+  glUseProgram(m_skinshader);
+
+  //material
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_NORMAL_ARRAY);  
+  
+  glVertexPointer(3, GL_FLOAT,sizeof(MmdStruct::PmdVertex),m_pVertex);  
+  glNormalPointer(GL_FLOAT,sizeof(MmdStruct::PmdVertex),
+		  &m_pVertex[0].normal_vec[0]);
+  float m[16 * m_boneNum];
+  for(int i = 0; i < m_boneNum; ++i){
+    for(int j =0; j < 16; ++j){
+      m[i*16 + j] = m_pCombMat[i].m[j];
+    }
+  }
+
+  //転置行列にする必要がある。
+  //3番目をGL_TRUEすると転置してくれる。
+  //(AB)T = (B)T(A)Tよりとりあえず逆にかけておいて転置することで正しい順番に直している。
+  //順番通りにかける場合はすべての行列演算にたいして転置行列を使用する必要がある。
+  glUniformMatrix4fv(m_uniform_defMat, m_boneNum, GL_FALSE, m);//koko
+  //  glUniformMatrix4fv(m_uniform_defMat, 1, GL_FALSE, m);
+
+  glEnableVertexAttribArray(m_attribute_boneNo);
+  glEnableVertexAttribArray(m_attribute_boneWeight);
+
+  glVertexAttribPointer(m_attribute_boneNo,
+			2,
+			GL_UNSIGNED_SHORT, 
+			GL_FALSE, 
+			sizeof(MmdStruct::PmdVertex),
+			m_pVertex[0].bone_num);
+
+  glVertexAttribPointer(m_attribute_boneWeight,
+			1,
+			GL_UNSIGNED_BYTE,
+			GL_FALSE, 
+			sizeof(MmdStruct::PmdVertex),
+			&m_pVertex[0].bone_weight);
+
+  DWORD from = 0, size = 0;
+  for(DWORD i = 0; i < m_materialNum; ++i){
+    const MmdStruct::PmdMaterial* m = m_pMaterial;
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, m[i].diffuse_color);
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, m[i].specularity);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, m[i].specular_color);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, m[i].mirror_color);
+
+    size = m[i].face_vert_count;
+        glDrawElements(GL_TRIANGLES, size , GL_UNSIGNED_SHORT, &m_pIndex[from]);
+    from += size ;
+  }
+
+#if 0
+  glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, red);
+    glPointSize(5);
+    glBegin(GL_POINTS);
+
+    for(DWORD i = 0; i < m_vertexNum; ++i)
+      glArrayElement(i);
+    glEnd();
+#endif
+
+
+
+  //  glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,red);
+  glDisableClientState(GL_NORMAL_ARRAY);  
+  glDisableClientState(GL_VERTEX_ARRAY);
+
+  glDisableVertexAttribArray(m_attribute_boneNo);
+  glDisableVertexAttribArray(m_attribute_boneWeight);
+
+  glUseProgram(0);
+  int index = 0;
+  float red[] = {1,0,0,1};
+  float blue[] = {0,0,1,1};
+
+  for(int i = 0; i < m_boneNum; ++i){
+    index = m_pBone[i].tail_pos_bone_index;
+    if(index != 0){
+
+      glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,red);
+      glPointSize(5.0);
+
+      glColor3f(1,0,0);
+      glBegin(GL_POINTS);
+      glVertex3f(m_pBone[i].bone_head_pos[0],
+		 m_pBone[i].bone_head_pos[1],
+		 m_pBone[i].bone_head_pos[2]
+		 );
+      glEnd();
+
+      /*
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,blue);
+      glColor3f(0,1,0);
+      glBegin(GL_POINTS);
+      glVertex3f(m_pBone[index].bone_head_pos[0],
+		 m_pBone[index].bone_head_pos[1],
+		 m_pBone[index].bone_head_pos[2]
+		 );
+      glEnd();
+      */
+    }
+  }
+  /*
+  glBegin(GL_TRIANGLES);
+  for(DWORD i = 0; i < m_idxNum; ++i){
+    glVertex3fv(m_pVertex[m_pIndex[i]].pos);
+  }
+  glEnd();
+  */
+}
+

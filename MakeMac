@@ -1,0 +1,1 @@
+g++ -L../glew/ -lmyglew -lm -Wno-deprecated-declarations -framework GLUT -framework OpenGL  *.cpp -o ma.out 

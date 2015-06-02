@@ -1,0 +1,9 @@
+#version 120
+
+// simple.frag
+
+void main (void)
+{
+  // フラグメントの色
+  gl_FragColor = gl_Color;
+}

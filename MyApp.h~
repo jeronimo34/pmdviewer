@@ -1,0 +1,16 @@
+#pragma once
+
+#include "constant.h"
+#include "PMDLoader.h"
+#include "PmdMesh.h"
+
+class CMyApp{
+ private:
+  CPMDLoader* m_pmdloader;
+  CPmdMesh* m_pmdMesh;
+ public:
+  CMyApp();
+  CMyApp(const CMyApp&);
+  ~CMyApp();
+  void Draw();
+};

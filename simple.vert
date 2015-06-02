@@ -1,0 +1,31 @@
+#version 120
+
+// simple.vert
+attribute vec4 boneNo;
+attribute vec4 boneW;
+
+varying vec3 vertex_light_position;
+varying vec3 vertex_light_half_vector;
+varying vec3 vertex_normal;
+uniform mat4 defMat[86];
+
+void main(void)
+{
+  // Calculate the normal value for this vertex, in world coordinates (
+  //  multiply by gl_NormalMatrix)
+  vertex_normal = normalize(gl_NormalMatrix * gl_Normal);
+  // Calculate the light position for this vertex
+  vertex_light_position = normalize(gl_LightSource[0].position.xyz);
+
+  // Calculate the light’s half vector
+  vertex_light_half_vector = normalize(gl_LightSource[0].halfVector.xyz);
+  
+  vec4 pos = vec4(0);
+  mat4 trans = defMat[int(boneNo.x)] * (float(boneW.x)/100.0)
+             + defMat[int(boneNo.y)] * (1.0 - float(boneW.x)/100.0);
+  
+  //gl_FrontColor = vec4(vec3(boneW.x/100.0), 1.0);
+  gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * trans * gl_Vertex;
+  //gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+  //gl_Position = ftransform();
+}

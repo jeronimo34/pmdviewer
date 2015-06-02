@@ -1,0 +1,191 @@
+
+#include "MotionManager.h"
+#include <math.h>
+#include <algorithm>
+#include <string>
+#include <set>
+
+
+
+using namespace std;
+
+int CMotionManager::m_motionNum;
+
+CMatrix4* CMotionManager::getAttribute(int motionid, float frame
+				       , const CPmdMesh &mesh){
+  //  cout << "getAttribute " << endl;
+
+  vector<VmdMotion>& m = m_Motions[motionid];
+  int boneNum = mesh.boneNum();
+
+  const Bone *b = mesh.bone();
+  float p = 0, n = 0;
+  int prevpos = 0, nextpos = 0;
+  CMatrix4 *pDef = mesh.boneDefMat();
+  CMatrix4 prevtrans, nexttrans;
+  CQuaternion prevr, nextr;
+
+  for(int i = 0; i < boneNum; ++i){
+    string s = b[i].boneName;
+
+    if(m_Bonemap.find(s) != m_Bonemap.end()){
+      //      cout << "name : " << s << endl;
+    //boneNameがモーションの中にある
+      p = 0; n = 0; 
+      vector< pair<int, int> >& v=m_Bonemap[s];
+      for(int j = 0; j < (int)v.size()-1; ++j){
+	n = (float)v[j+1].first;
+	if(p <= frame && frame < n){
+	  prevpos = v[j].second;
+	  nextpos = v[j+1].second;
+	  /*
+	  cout << "p " << p << " n " << n << endl;
+	  cout << " prevpos " << prevpos << " nextpos " << nextpos << endl;*/
+	  break;
+	}
+	p = n;
+      }
+
+      //key ga hitotu sikanai baai
+      if(v.size() == 1){
+	prevpos = v[0].second;
+	nextpos = v[0].second;
+      }
+
+      prevtrans = Mat4Translated(m[prevpos].location[0],
+				 m[prevpos].location[1],
+				 m[prevpos].location[2]);//boneの前の姿勢
+      nexttrans = Mat4Translated(m[nextpos].location[0],
+				 m[nextpos].location[1],
+				 m[nextpos].location[2]);//boneの次の姿勢
+      /*
+      cout << "prevlocation" << endl;
+      cout << m[prevpos].location[0] << " " <<
+	m[prevpos].location[1] << " " << 
+	m[prevpos].location[2] << " " << endl;
+      cout << "nextlocation" << endl;
+      cout << m[nextpos].location[0] << " " <<
+	m[nextpos].location[1] << " " << 
+	m[nextpos].location[2] << " " << endl;
+      */
+      prevr = CQuaternion(
+			  m[prevpos].rotation[3],//w
+			  m[prevpos].rotation[0],//x
+			  m[prevpos].rotation[1],//y
+			  m[prevpos].rotation[2]//z
+			  );
+      nextr = CQuaternion(
+			  m[nextpos].rotation[3],//w
+			  m[nextpos].rotation[0],//x
+			  m[nextpos].rotation[1],//y
+			  m[nextpos].rotation[2]//z
+			  );
+      /*
+      cout << "prevrotation" << endl;
+      cout << m[prevpos].rotation[0] << " " <<
+	m[prevpos].rotation[1] << " " << 
+	m[prevpos].rotation[2] << " " << 
+	m[prevpos].rotation[3] << " " << endl;
+
+      cout << "nextrotation" << endl;
+      cout << m[nextpos].rotation[0] << " " <<
+	m[nextpos].rotation[1] << " " << 
+	m[nextpos].rotation[2] << " " << 
+	m[nextpos].rotation[3] << " " << endl;
+      */
+
+      //      cout << "n : "<<n << " p : " << p << endl;
+      float s = 0.0;
+      if(fabs(n - p) < 0.000000001){
+      }else{
+	s = (frame - p)/(n - p);    
+      }
+      pDef[i] = (prevtrans * (1.0 - s) + nexttrans * s) * 
+	(QuaternionToMatrix(slerp(prevr, nextr, s)));
+    }
+    //モーションの中に一致するボーンがありません
+  }
+getAttributeIK(mesh);
+  return NULL;
+}
+
+//IK
+void CMotionManager::getAttributeIK(const CPmdMesh &mesh)
+{
+//segru
+cout << endl << "getAttributeIK" << endl;
+
+  CVector3 localEffectorPos, localTargetPos;
+  WORD ikNum = mesh.getIkNum();
+  MmdStruct::PmdIK *ikdata = mesh.getIkData();
+cout << "ikNum : "<< ikNum << endl;
+
+  Bone *bones = mesh.bone();
+
+  for(WORD k = 0; k < ikNum; ++k){
+    MmdStruct::PmdIK *data = &ikdata[k];
+
+//cout << "iterations : " << data->iterations << endl;
+
+    for(WORD i = 0; i < data->iterations; ++i){
+      for(WORD j = 0; j < data->ik_chain_length; ++j){
+
+	WORD index = data->ik_child_bone_index[j];
+	CVector3 iktarget 
+	  = bones[data->ik_target_bone_index].GetModelLocalPosition();
+
+	CVector3 ik = bones[data->ik_bone_index].GetModelLocalPosition();
+
+	CMatrix4 tmp = bones[index].GetModelLocalBoneMat();
+	CMatrix4 invCoord = tmp.inverse();
+
+	localEffectorPos = invCoord * iktarget;
+	localTargetPos = invCoord * ik;
+
+	CVector3 localEffectorDir = localEffectorPos.normal();
+	CVector3 localTargetDir = localEffectorPos.normal();
+
+	double p = localEffectorDir.dot(localTargetDir);
+	//1 wo koenai youni
+	if(p > 1.0 - 1.0e-5f)continue;
+
+	double angle = acos(p);
+	CVector3 axis = localEffectorDir.det(localTargetDir);
+	CMatrix4 rotation = QuaternionToMatrix(
+					       makeFromAxis(angle, axis)
+					       );
+	
+	bones[index].boneMat = bones[index].boneMat * rotation;
+      }
+    }
+  }
+}
+
+static bool convFlame(const VmdMotion& a, const VmdMotion &b){
+  return a.flameNo < b.flameNo;
+}
+
+//vmd motion no touroku
+void CMotionManager::registVMDMotion(CVmdLoader *loader){
+
+  m_Motions[m_motionNum] = loader->GetMotions();
+  vector<VmdMotion>& m = m_Motions[m_motionNum];
+
+  sort(m.begin(), m.end(), convFlame);
+
+  for(int i = 0; i < (int)m.size(); ++i){
+    m_Bonemap[m[i].boneName].push_back( pair<int,int>(m[i].flameNo, i));
+  }
+
+  m_motionNum++;
+}
+
+
+CMotionManager::~CMotionManager(){
+  for(int i = 0; i < (int)m_Motions.size(); ++i){
+    while(!m_Motions[i].empty())
+      m_Motions[i].pop_back();
+  }
+  m_Bonemap.clear();
+}
+

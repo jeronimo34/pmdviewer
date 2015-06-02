@@ -1,0 +1,12 @@
+#include <iostream>
+#include "VmdLoader.h"
+
+
+using namespace std;
+
+int main(){
+  CVmdLoader loader("nya.vmd");
+
+  cout << "hoge" << endl;
+}
+

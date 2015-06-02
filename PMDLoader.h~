@@ -1,0 +1,109 @@
+#pragma once
+
+#include "constant.h"
+#include <string.h>
+
+namespace MmdStruct{
+  #pragma pack(1)
+  struct PmdHeader{
+    char magic[3]; // "Pmd"
+    float version; // 00 00 80 3F == 1.00 // 訂正しました。コメントありがとうございます
+    char model_name[20];
+    char comment[256];
+  };
+
+  struct PmdVertex{
+    float pos[3]; // x, y, z // 座標
+    float normal_vec[3]; // nx, ny, nz // 法線ベクトル
+    float uv[2]; // u, v // UV座標 // MMDは頂点UV
+    WORD bone_num[2]; // ボーン番号1、番号2 // モデル変形(頂点移動)時に影響
+    BYTE bone_weight; // ボーン1に与える影響度 // min:0 max:100 // ボーン2への影響度は、(100 - bone_weight)
+    BYTE edge_flag; // 0:通常、1:エッジ無効 // エッジ(輪郭)が有効の場合
+  };
+
+  struct PmdMaterial{
+    float diffuse_color[3]; // dr, dg, db // 減衰色
+    float alpha; // 減衰色の不透明度
+    float specularity;
+    float specular_color[3]; // sr, sg, sb // 光沢色
+    float mirror_color[3]; // mr, mg, mb // 環境色(ambient)
+    BYTE toon_index; // toon??.bmp // 0.bmp:0xFF, 1(01).bmp:0x00 ・・・ 10.bmp:0x09
+    BYTE edge_flag; // 輪郭、影
+    DWORD face_vert_count; // 面頂点数 // 面数ではありません。この材質で使う、面頂点リストのデータ数です。
+    char texture_file_name[20]; // テクスチャファイル名またはスフィアファイル名 // 
+  };
+
+  struct PmdBone{
+    char bone_name[20]; // ボーン名
+    WORD parent_bone_index; // 親ボーン番号(ない場合は0xFFFF)
+    WORD tail_pos_bone_index; // tail位置のボーン番号(チェーン末端の場合は0xFFFF 0 →補足2) // 親：子は1：多なので、主に位置決め用
+    BYTE bone_type; // ボーンの種類
+    WORD ik_parent_bone_index; // IKボーン番号(影響IKボーン。ない場合は0)
+    float bone_head_pos[3]; // x, y, z // ボーンのヘッドの位置
+  };
+
+  struct PmdIK{
+    WORD ik_bone_index; // IKボーン番号
+    WORD ik_target_bone_index; // IKターゲットボーン番号 // IKボーンが最初に接続するボーン
+    BYTE ik_chain_length; // IKチェーンの長さ(子の数)
+    WORD iterations; // 再帰演算回数 // IK値1
+    float control_weight; // 演算1回あたりの制限角度 // IK値2
+    WORD *ik_child_bone_index; // IK影響下のボーン番号
+  };
+  #pragma pack()
+}
+
+class CPMDLoader{
+ private:
+  //vertex
+  DWORD m_vertexNum;
+  MmdStruct::PmdVertex *m_pVertex;  
+  //face
+  DWORD m_faceNum;//subeteno men no tyouten no goukei
+  WORD* m_pFaceIndex;
+  
+  //material
+  DWORD m_materialNum;
+  MmdStruct::PmdMaterial *m_pMaterial;
+  
+  //bone
+  WORD m_boneNum;
+  MmdStruct::PmdBone *m_pBone;
+
+  WORD m_ikNum; // IKデータ数
+  MmdStruct::PmdIK *m_pIK;
+ public:
+  CPMDLoader(const char* fname);
+  ~CPMDLoader();
+
+  DWORD getVertexNum(){return m_vertexNum;}
+  void getPmdVertex(MmdStruct::PmdVertex* out){
+    memcpy(out, m_pVertex, sizeof(MmdStruct::PmdVertex) * m_vertexNum);
+  }
+
+  DWORD getFaceNum(){return m_faceNum;}
+  void getFaceIndex(WORD* out){
+    memcpy(out, m_pFaceIndex, sizeof(WORD) * m_faceNum);
+  }
+
+  DWORD getMaterialNum(){return m_materialNum;}
+  void getPmdMaterial(MmdStruct::PmdMaterial* out){
+    memcpy(out, m_pMaterial, sizeof(MmdStruct::PmdMaterial) * m_materialNum);
+  }
+
+  DWORD getBoneNum() const {return m_boneNum;}
+  void getPmdBone(MmdStruct::PmdBone *out){
+    memcpy(out, m_pBone, sizeof(MmdStruct::PmdBone) * m_boneNum);
+  }
+
+  WORD getIKNum() const {
+    return m_ikNum;
+  }
+  /*
+  void getPmdIK(MmdStruct::PmdIK *out){
+  }
+  */
+  MmdStruct::PmdIK *getPmdIK() const {
+    return m_pIK;
+  }
+};

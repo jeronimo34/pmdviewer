@@ -1,0 +1,100 @@
+#include "glsl.h"
+
+//glew Init wo site oku
+
+GLuint CGLSL::makeProgram(const char *vname, const char *fname){
+  printf("hello");
+
+  GLuint vertShader = glCreateShader(GL_VERTEX_SHADER);
+  GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
+  GLint linked;
+
+  if(!loadShader(vertShader,vname)){
+    printf("failed to vertexshader.\n");
+    return -1;
+  }
+  if(!loadShader(fragShader,fname)){
+    printf("failed to fragmentshader.\n");
+    return -1;
+  }
+
+  m_gl2Program = glCreateProgram();
+  glAttachShader(m_gl2Program, vertShader);
+  glAttachShader(m_gl2Program, fragShader);
+
+  glLinkProgram(m_gl2Program);
+  glGetProgramiv(m_gl2Program, GL_LINK_STATUS, &linked);
+  printProgramInfoLog(m_gl2Program);
+
+  if(linked == GL_FALSE){
+    printf("link error\n");
+    return -1;
+  }
+  glDeleteShader(vertShader);
+  glDeleteShader(fragShader);
+  glUseProgram(m_gl2Program);
+
+  //glUniform1i(~~~~~)
+
+  return m_gl2Program;
+}
+
+bool CGLSL::loadShader(GLuint shader, const char *file){
+  int size;
+  GLint compiled;
+  char *buf;
+  ifstream ifs(file, ifstream::in);
+  if(ifs.fail()){
+    ifs.close();
+    return false;
+  }
+
+  ifs.seekg(0, ifstream::end);
+  size = ifs.tellg();
+
+  buf = new char[size];
+
+  ifs.seekg(0, ifstream::beg);
+  ifs.read(buf, size);
+
+  glShaderSource(shader, 1, (const GLchar**)&buf, &size);
+  delete[] buf;
+  buf = 0;
+
+  ifs.close();
+  glCompileShader(shader);
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+  printShaderInfoLog(shader);
+
+  if(compiled == GL_FALSE){
+    printf("compile error in %s\n",file);
+    return false;
+  }
+  return true;
+}
+
+void CGLSL::printShaderInfoLog(GLuint shader){
+  int logSize;
+  int length;
+  char buf[1024];
+
+  glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logSize);
+  if(logSize > 1){
+    glGetShaderInfoLog(shader, 1024, &length, buf);
+    printf("%s\n",buf);
+  }
+}
+
+
+//link error
+void CGLSL::printProgramInfoLog(GLuint program){
+  int logSize;
+  int length;
+  char s_logBuffer[1024];
+  glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logSize);
+
+  if(logSize > 1){
+    glGetProgramInfoLog(program, 1024, &length, s_logBuffer);
+    printf("%s\n",s_logBuffer);
+  }
+}

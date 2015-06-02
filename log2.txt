@@ -1,0 +1,230 @@
+螟画鋤
+shader init
+Pmd
+seekpos = 3
+version = 1.000000
+seekpos = 7
+NNNNN
+seekpos = 27
+NNNNN ver.1.2
+NNNN	NNNNNNNN
+NNNNN	NNNN
+seekpos = 283
+vsize = 4540
+seekpos = 287
+vertex
+seekpos = 172807
+facenum 17058
+seekpos = 172811
+idx
+seekpos = 206927
+material  = 9
+seekpos = 206931
+bone koko86 
+ikNum4
+hoge
+name : センター
+flameNo 0 i 13
+x :-0 y : 0 z : -0w : 1
+flameNo 10 i 50
+x :-0 y : 0 z : -0w : 1
+flameNo 20 i 60
+x :-0 y : 0 z : -0w : 1
+flameNo 30 i 63
+x :-0 y : 0 z : -0w : 1
+flameNo 40 i 73
+x :-0 y : 0 z : -0w : 1
+name : 右つま先ＩＫ
+flameNo 0 i 32
+x :-0 y : 0 z : -0w : 1
+name : 右ひざ
+flameNo 0 i 36
+x :-0 y : 0 z : -0w : 1
+name : 右ひじ
+flameNo 0 i 41
+x :-0 y : 0 z : -0.258819w : 0.965926
+flameNo 20 i 57
+x :-0 y : 0 z : -0.258819w : 0.965926
+flameNo 40 i 71
+x :-0 y : 0 z : -0.258819w : 0.965926
+name : 右肩
+flameNo 0 i 39
+x :-0.321394 y : -0.116978 z : -0.321394w : 0.883022
+flameNo 10 i 51
+x :-0 y : 0 z : -0.130526w : 0.991445
+flameNo 20 i 55
+x :0.330366 y : 0.0885213 z : -0.24321w : 0.907673
+flameNo 30 i 65
+x :-0 y : 0 z : -0.130526w : 0.991445
+flameNo 40 i 70
+x :-0.321394 y : -0.116978 z : -0.321394w : 0.883022
+name : 右手首
+flameNo 0 i 47
+x :-0 y : 0 z : -0w : 1
+name : 右足
+flameNo 0 i 34
+x :-0 y : 0 z : -0w : 1
+name : 右足ＩＫ
+flameNo 0 i 30
+x :-0 y : 0 z : -0w : 1
+flameNo 20 i 54
+x :-0 y : 0 z : -0w : 1
+flameNo 40 i 72
+x :-0 y : 0 z : -0w : 1
+name : 右足首
+flameNo 0 i 1
+x :-0 y : 0 z : -0w : 1
+name : 右目
+flameNo 0 i 49
+x :-0 y : 0 z : -0w : 1
+name : 右翼１
+flameNo 0 i 20
+x :-0 y : 0 z : -0w : 1
+name : 右翼２
+flameNo 0 i 22
+x :-0 y : 0 z : -0w : 1
+name : 右翼３
+flameNo 0 i 24
+x :-0 y : 0 z : -0w : 1
+name : 右腕
+flameNo 0 i 40
+x :-0 y : 0 z : -0w : 1
+name : 下半身
+flameNo 0 i 28
+x :-0 y : 0 z : -0w : 1
+name : 左つま先ＩＫ
+flameNo 0 i 31
+x :-0 y : 0 z : -0w : 1
+name : 左ひざ
+flameNo 0 i 35
+x :-0 y : 0 z : -0w : 1
+name : 左ひじ
+flameNo 0 i 38
+x :-0 y : 0 z : 0.130526w : 0.991445
+flameNo 20 i 56
+x :-0 y : 0 z : 0.258819w : 0.965926
+flameNo 40 i 69
+x :-0 y : 0 z : 0.130526w : 0.991445
+name : 左肩
+flameNo 0 i 37
+x :0.330366 y : -0.0885213 z : 0.24321w : 0.907673
+flameNo 10 i 52
+x :-0 y : 0 z : 0.130526w : 0.991445
+flameNo 20 i 59
+x :-0.321394 y : 0.116978 z : 0.321394w : 0.883022
+flameNo 30 i 64
+x :-0 y : 0 z : 0.130526w : 0.991445
+flameNo 40 i 68
+x :0.330366 y : -0.0885213 z : 0.24321w : 0.907673
+name : 左手首
+flameNo 0 i 46
+x :-0 y : 0 z : -0w : 1
+name : 左足
+flameNo 0 i 33
+x :-0 y : 0 z : -0w : 1
+name : 左足ＩＫ
+flameNo 0 i 29
+x :-0 y : 0 z : -0w : 1
+flameNo 20 i 61
+x :-0 y : 0 z : -0w : 1
+flameNo 40 i 67
+x :-0 y : 0 z : -0w : 1
+name : 左足首
+flameNo 0 i 26
+x :-0 y : 0 z : -0w : 1
+name : 左目
+flameNo 0 i 48
+x :-0 y : 0 z : -0w : 1
+name : 左翼１
+flameNo 0 i 19
+x :-0 y : 0 z : -0w : 1
+name : 左翼２
+flameNo 0 i 21
+x :-0 y : 0 z : -0w : 1
+name : 左翼３
+flameNo 0 i 23
+x :-0 y : 0 z : -0w : 1
+name : 左腕
+flameNo 0 i 25
+x :-0 y : 0 z : -0w : 1
+name : 首
+flameNo 0 i 42
+x :-0 y : 0 z : -0w : 1
+name : 上半身
+flameNo 0 i 27
+x :0.0871557 y : 0 z : -0w : 0.996195
+flameNo 10 i 53
+x :0.258819 y : 0 z : -0w : 0.965926
+flameNo 20 i 58
+x :0.0871557 y : 0 z : -0w : 0.996195
+flameNo 21 i 62
+x :0.104528 y : 0 z : -0w : 0.994522
+flameNo 30 i 66
+x :0.258819 y : 0 z : -0w : 0.965926
+flameNo 40 i 74
+x :0.0871557 y : 0 z : -0w : 0.996195
+name : 頭
+flameNo 0 i 43
+x :-0 y : 0 z : -0w : 1
+name : 髪
+flameNo 0 i 45
+x :-0 y : 0 z : -0w : 1
+name : 翼
+flameNo 0 i 18
+x :-0 y : 0 z : -0w : 1
+name : 両目
+flameNo 0 i 44
+x :-0 y : 0 z : -0w : 1
+name : スカート右1
+flameNo 0 i 8
+x :-0 y : 0 z : -0w : 1
+name : スカート右2
+flameNo 0 i 10
+x :-0 y : 0 z : -0w : 1
+name : スカート右後1
+flameNo 0 i 0
+x :-0 y : 0 z : -0w : 1
+name : スカート右後2
+flameNo 0 i 15
+x :-0 y : 0 z : -0w : 1
+name : スカート右前1
+flameNo 0 i 5
+x :-0 y : 0 z : -0w : 1
+name : スカート右前2
+flameNo 0 i 7
+x :-0 y : 0 z : -0w : 1
+name : スカート後1
+flameNo 0 i 16
+x :-0 y : 0 z : -0w : 1
+name : スカート後2
+flameNo 0 i 17
+x :-0 y : 0 z : -0w : 1
+name : スカート左1
+flameNo 0 i 9
+x :-0 y : 0 z : -0w : 1
+name : スカート左2
+flameNo 0 i 11
+x :-0 y : 0 z : -0w : 1
+name : スカート左後1
+flameNo 0 i 12
+x :-0 y : 0 z : -0w : 1
+name : スカート左後2
+flameNo 0 i 14
+x :-0 y : 0 z : -0w : 1
+name : スカート左前1
+flameNo 0 i 4
+x :-0 y : 0 z : -0w : 1
+name : スカート左前2
+flameNo 0 i 6
+x :-0 y : 0 z : -0w : 1
+name : スカート前1
+flameNo 0 i 2
+x :-0 y : 0 z : -0w : 1
+name : スカート前2
+flameNo 0 i 3
+x :-0 y : 0 z : -0w : 1
+copy vertex
+copy face
+copy material
+copy bone
+copy ik
