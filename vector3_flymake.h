@@ -1,0 +1,317 @@
+#pragma once
+#ifndef __VECTOR3H_
+#define __VECTOR3H_
+
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+#include <iostream>
+
+using namespace std;
+
+#define PI 3.141592655359
+
+class CVector3{
+ public:
+  double x,y,z;
+ CVector3(double X, double Y, double Z) : x(X), y(Y), z(Z){}
+ CVector3() : x(0.0), y(0.0), z(0.0){}
+  
+  //v0 + v1
+  CVector3 operator + (const CVector3& v){
+    return CVector3(x + v.x, y + v.y, z + v.z);
+  }
+  
+  //v0 += v1
+  void operator += (const CVector3& v){
+    x += v.x;
+    y += v.y;
+    z += v.z;
+  }
+
+  //v0 - v1
+  CVector3 operator - (const CVector3& v) const {
+    return CVector3(x - v.x, y - v.y, z - v.z);
+  }
+  //v0 += v1
+  void operator -= (const CVector3& v){
+    x -= v.x;
+    y -= v.y;
+    z -= v.z;
+  }
+
+  //v * a
+  CVector3 operator * (double a) const {
+    return CVector3(x*a, y*a, z*a);
+  }
+
+  //v *= a
+  void operator *= (const double a){
+    x = x*a;
+    y = y*a;
+    z = z*a;
+  }
+
+  //v / a
+  CVector3 operator / (double a) const {
+    return CVector3(x/a, y/a, z/a);
+  }
+  //v /= a
+  void operator /= (const double a){
+    x = x/a;
+    y = y/a;
+    z = z/a;
+  }
+  //v[0] == x
+  double operator [] (const int i) const {
+    if(i == 0)return x;
+    else if(i == 1)return y;
+    else if(i == 2)return z;
+    throw "operator[] error";
+  }
+
+  double& operator [] (const int i){
+    if(i == 0)return x;
+    else if(i == 1)return y;
+    else if(i == 2)return z;
+    throw "operator[] error";
+  }
+  //naiseki
+  double dot(const CVector3& v) const {
+    return x*v.x + y*v.y + z*v.z;
+  }
+
+  //gaiseki
+  CVector3 det(const CVector3& v) const {
+    return CVector3(y*v.z - z*v.y, z*v.x - x*v.z, x*v.y - y*v.x);
+  }
+  
+  CVector3 normal() const {
+    if(length() < 0.000000001)return CVector3(0,0,0);
+    return (*this)/length();
+  }
+  double length(){
+    return sqrt(x*x + y*y + z*z);
+  }
+
+  double length() const {
+    double len = x*x + y*y + z*z;
+    return sqrt(len);
+  }
+  
+  void print();
+ private:
+};
+
+  //a * v
+CVector3 operator * (const float a, const CVector3& v);
+
+//quaternion
+class CQuaternion{
+ public:
+  double w,x,y,z;
+  CQuaternion(double W,double X, double Y, double Z){
+    x = X;
+    y = Y;
+    z = Z;
+    w = W;
+  }
+  CQuaternion(){
+    x = 0;
+    y = 0;
+    z = 0;
+    w = 0;
+  }
+ private:
+};
+
+//prototype
+//axis haseikikasareteiru hituyougaarumasu
+CQuaternion makeFromAxis(const double rad, const CVector3& axis);
+//a * s + b * (1-s)
+CQuaternion slerp(const CQuaternion &a, const CQuaternion &b, double s);
+
+class CMatrix4{
+ public:
+  double m[16];
+  //0, 4, 8, 12
+  //1, 5, 9, 13
+  //2, 6, 10, 14
+  //3, 7, 11, 15   
+
+  CMatrix4(){
+    identity();
+  }
+  void identity(){
+    memset(m,0,sizeof(m));
+    m[0] = m[5] = m[10] = m[15] = 1.0;
+  }
+  CMatrix4 transpose(){
+    CMatrix4 tm;
+    for(int i = 0; i < 16; ++i){
+      tm.m[(i*4)%16 + i/4] = m[i];
+    }
+    return tm;
+  }
+  CMatrix4 inverse(){
+    CMatrix4 b;
+    double a11 = m[0], a21 = m[1], a31 = m[2], a41 = m[3],
+           a12 = m[4], a22 = m[5], a32 = m[6], a42 = m[7],
+           a13 = m[8], a23 = m[9], a33 = m[10], a43 = m[11],
+           a14 = m[12], a24 = m[13], a34 = m[14], a44 = m[15];
+    
+    double detA = a11*a22*a33*a44 + a11*a23*a34*a42 + a11*a24*a32*a43
+                + a12*a21*a34*a43 + a12*a23*a31*a44 + a12*a24*a33*a41
+                + a13*a21*a32*a44 + a13*a22*a34*a41 + a13*a24*a31*a42
+                + a14*a21*a33*a42 + a14*a22*a31*a43 + a14*a23*a32*a41
+                - a11*a22*a34*a43 - a11*a23*a32*a44 - a11*a24*a33*a42
+                - a12*a21*a33*a44 - a12*a23*a34*a41 - a12*a24*a31*a43
+                - a13*a21*a34*a42 - a13*a22*a31*a44 - a13*a24*a32*a41
+                - a14*a21*a32*a43 - a14*a22*a33*a41 - a14*a23*a31*a42;
+    if(fabs(detA) < 0.0000000000001 )return b;
+	
+    //1
+	b.m[0] = a22*a33*a44 + a23*a34*a42 + a24*a32*a43 - a22*a34*a43 - a23*a32*a44 - a24*a33*a42;
+    b.m[4] = a12*a34*a43 + a13*a32*a44 + a14*a33*a42 - a12*a34*a42 - a13*a34*a42 - a14*a32*a43;
+    b.m[8] = a12*a23*a44 + a13*a24*a42 + a14*a22*a43 - a12*a24*a43 - a13*a22*a44 - a14*a23*a42;
+    b.m[12] =a12*a24*a33 + a13*a22*a34 + a14*a23*a32 - a12*a23*a34 - a13*a24*a32 - a14*a22*a33;
+	//2
+    b.m[1] = a21*a34*a43 + a23*a31*a44 + a24*a33*a41 - a21*a33*a44 - a23*a34*a41 - a24*a31*a43;
+    b.m[5] = a11*a33*a44 + a13*a34*a41 + a14*a31*a43 - a11*a34*a43 - a13*a31*a44 - a14*a33*a41;
+	b.m[9] = a11*a24*a43 + a13*a21*a44 + a14*a23*a41 - a11*a23*a44 - a13*a24*a41 - a14*a21*a43;
+	b.m[13]= a11*a23*a34 + a13*a24*a31 + a14*a21*a33 - a11*a24*a33 - a13*a21*a34 - a14*a23*a31;
+	//3
+    b.m[2] = a21*a32*a44 + a22*a34*a41 + a24*a31*a42 - a21*a34*a42 - a22*a31*a44 - a24*a32*a41;
+    b.m[6] = a11*a34*a42 + a12*a31*a44 + a14*a32*a41 - a11*a32*a44 - a12*a34*a41 - a14*a31*a42;
+    b.m[10] =a11*a22*a44 + a12*a24*a41 + a14*a21*a42 - a11*a24*a42 - a12*a21*a44 - a14*a22*a41;
+    b.m[14] =a11*a24*a32 + a12*a21*a34 + a14*a22*a31 - a11*a22*a34 - a12*a24*a31 - a14*a21*a32;
+    //4
+    b.m[3] = a21*a33*a42 + a22*a31*a43 + a23*a32*a41 - a21*a32*a43 - a22*a33*a41 - a23*a31*a42;
+    b.m[7] = a11*a32*a43 + a12*a33*a41 + a13*a31*a42 - a11*a33*a42 - a12*a31*a43 - a13*a32*a41;
+    b.m[11] =a11*a23*a42 + a12*a21*a43 + a13*a22*a41 - a11*a22*a43 - a12*a23*a41 - a13*a21*a42;
+    b.m[15] =a11*a22*a33 + a12*a23*a31 + a13*a21*a32 - a11*a23*a32 - a12*a21*a33 - a13*a22*a31;
+	return b * (1.0 / detA);
+  }
+
+  CMatrix4 operator * (double a){
+	  CMatrix4 tm = (*this);
+	  for (int i = 0; i < 16; ++i)
+		  tm.m[i] *= a;
+	  return tm;
+  }
+
+  //this * othermat
+  CMatrix4 operator * (const CMatrix4 &sm) const {
+	  CMatrix4 tm;
+	  for (int i = 0; i < 4; ++i){
+		  for (int j = 0; j < 4; ++j){
+			  tm.m[i * 4 + j]
+				  = this->m[j] * sm.m[i * 4]
+				  + this->m[j + 4] * sm.m[i * 4 + 1]
+				  + this->m[j + 8] * sm.m[i * 4 + 2]
+				  + this->m[j + 12] * sm.m[i * 4 + 3];
+		  }
+	  }
+	  return tm;
+  }
+  //this + othermat
+  CMatrix4 operator + (const CMatrix4 &sm) const {
+    CMatrix4 tm;
+    for(int i = 0; i < 16; ++i){
+      tm.m[i] = this->m[i] + sm.m[i];
+    }
+    return tm;
+  }
+
+  CVector3 operator * (const CVector3 &v) const {
+	  CVector3 tv;
+	  for (int j = 0; j < 3; ++j){
+		  tv[j]  = this->m[j] * v[0]
+		    + this->m[j + 4] * v[1]
+		    + this->m[j + 8] * v[2]
+		    + this->m[j + 12];
+	  }
+	  return tv;
+  }
+
+ private:
+};
+
+//prototype
+CMatrix4 Mat4Translated(double x, double y, double z);
+CMatrix4 QuaternionToMatrix(const CQuaternion& q);
+CMatrix4 Mat4RotatedX(double angle);
+CMatrix4 Mat4RotatedY(double angle);
+CMatrix4 Mat4RotatedZ(double angle);
+
+
+class CMatrix3{
+ public:
+  //0, 3, 6
+  //1, 4, 7
+  //2, 5, 8
+  double m[9];
+
+  CMatrix3(){
+    identity();
+  }
+  void identity(){
+    memset(m, 0, sizeof(m));
+    m[0] = m[4] = m[8] = 1.0;
+  }
+  CMatrix3 inverse(){
+    double invdet = 1.0/(m[0]*m[4]*m[8] + m[1]*m[5]*m[6] + m[2]*m[3]*m[7] - 
+                         (m[0]*m[5]*m[7] + m[2]*m[4]*m[6] + m[1]*m[3]*m[8]));
+
+    CMatrix3 tm;
+    tm.m[0] = m[4] * m[8] - m[7] * m[5];
+    tm.m[1] = m[7] * m[2] - m[1] * m[8];
+    tm.m[2] = m[1] * m[5] - m[4] * m[2];
+
+    tm.m[3] = m[6] * m[5] - m[3] * m[8];
+    tm.m[4] = m[0] * m[8] - m[6] * m[5];
+    tm.m[5] = m[3] * m[2] - m[0] * m[5];
+    
+    tm.m[6] = m[3] * m[7] - m[6] * m[4];
+    tm.m[7] = m[6] * m[1] - m[0] * m[7];
+    tm.m[8] = m[0] * m[4] - m[3] * m[1];
+
+    return tm * invdet;
+  }
+
+  CMatrix3 operator * (double a){
+	  CMatrix3 tm = (*this);
+	  for (int i = 0; i < 9; ++i)
+		  tm.m[i] *= a;
+	  return tm;
+  }
+
+  //this * othermat
+  CMatrix3 operator * (const CMatrix3 &sm) const {
+	  CMatrix3 tm;
+	  for (int i = 0; i < 3; ++i){
+		  for (int j = 0; j < 3; ++j){
+			  tm.m[i * 3 + j]
+				  = this->m[j] * sm.m[i * 3]
+				  + this->m[j + 3] * sm.m[i * 3 + 1]
+				  + this->m[j + 6] * sm.m[i * 3 + 2];
+		  }
+	  }
+	  return tm;
+  }
+
+  CVector3 operator * (const CVector3 &v) const {
+	  CVector3 tv;
+	  for (int j = 0; j < 3; ++j){
+		  tv[j]
+			  = this->m[j] * v[0]
+			  + this->m[j + 3] * v[1]
+			  + this->m[j + 6] * v[2];
+	  }
+	  return tv;
+  }
+ private:
+	 int a;
+}; 
+
+#endif

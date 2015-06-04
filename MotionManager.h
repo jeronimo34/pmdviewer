@@ -17,6 +17,13 @@ struct MotionInfo{
   int lastflame;
 };
 
+struct MorphInfo{
+  int flameNo;
+  int morphpos;
+  float weight;
+};
+
+
 class CMotionManager {
  private:
   CMotionManager(){
@@ -33,15 +40,19 @@ class CMotionManager {
   //IK
   int m_lastframe;
 
+  map< int, vector<VmdMorph> > m_Morphs;
+  map< string, vector<MorphInfo> > m_MorphMap;
  public:
   static CMotionManager& instance(){
     static CMotionManager inst;
     return inst;
   }  
   void getAttributeIK(const CPmdMesh &mesh);  
-  CMatrix4 *getAttribute(int motionid, float frame, const CPmdMesh &mesh); 
-
+  CMatrix4 *getAttribute(int motionid, float flame, const CPmdMesh &mesh); 
+  void getAttributeMorph(int motionid, float flame, const CPmdMesh &mesh);
   void registVMDMotion(CVmdLoader* loader);
+
+
 };
 
 

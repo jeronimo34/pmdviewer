@@ -99,6 +99,7 @@ class CVector3{
     return sqrt(len);
   }
   
+  void print();
  private:
 };
 

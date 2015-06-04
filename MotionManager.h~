@@ -11,6 +11,11 @@
 
 using namespace std;
 
+struct MotionInfo{
+  int motionpos;
+  int flame;
+  int lastflame;
+};
 
 class CMotionManager {
  private:
@@ -26,15 +31,15 @@ class CMotionManager {
   //ボーンそれぞれのキーフレームを取得 pair  フレーム番号 motionの位置
   map<string, vector< pair<int, int> > > m_Bonemap;
   //IK
-  void getAttributeIK(const CPmdMesh &mesh);
+  int m_lastframe;
 
  public:
   static CMotionManager& instance(){
     static CMotionManager inst;
     return inst;
   }  
-  
-CMatrix4 *getAttribute(int motionid, float frame, const CPmdMesh &mesh); 
+  void getAttributeIK(const CPmdMesh &mesh);  
+  CMatrix4 *getAttribute(int motionid, float frame, const CPmdMesh &mesh); 
 
   void registVMDMotion(CVmdLoader* loader);
 };

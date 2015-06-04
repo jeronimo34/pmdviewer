@@ -6,6 +6,7 @@
 #include <iconv.h>
 #include "MyApp.h"
 #include "PMDLoader.h"
+#include "Input.h"
 
 using namespace std;
 CMyApp* g_app = NULL;
@@ -15,6 +16,10 @@ static void display();
 static void key(unsigned char key, int x, int y);
 static void reshape(int w, int h);
 static void idle();
+static void mouse(int button, int state, int x, int y);
+static void motion(int x, int y);
+
+
 
 void glInit(int argc, char** argv){
   //mac の場合初期化の必要ないそうです。  
@@ -47,25 +52,40 @@ void glInit(int argc, char** argv){
   glutKeyboardFunc(key); 
   glutReshapeFunc(reshape);
   glutIdleFunc(idle);
+  glutMotionFunc(motion);
+  glutMouseFunc(mouse);
 }
 
 
 void display(){
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  
-  glLoadIdentity();
-  gluLookAt(0,3,20,
-	    0,3,0,
-	    0,1,0);
+  CInput& input = CInput::instance();
+  input.update();
 
-  static float lightpos0[] = {0,10,0,1.0};
-  static float lightpos[] = {0, 20, 0, 1.0};
+  static float lightpos0[] = {0,10,10,1.0};
+  static float lightpos[] = {0, 10, 100, 1.0};
   glLightfv(GL_LIGHT0, GL_POSITION, lightpos0);
   glLightfv(GL_LIGHT1, GL_POSITION, lightpos);
 
+  glPushMatrix();
   g_app->Draw();
+  glPopMatrix();
 
+  glPushMatrix();
+  //Fllor
+  static int size = 5;
+  for(int i = -50; i < 50; i++){
+    for(int j = -50; j < 50; ++j){
+      glBegin(GL_LINE_LOOP);
+      glVertex3f(i*size,0,j*size);
+      glVertex3f((i+1)*size,0,j*size);
+      glVertex3f((i+1)*size,0,(j+1)*size);
+      glVertex3f(i*size,0,(j+1)*size);
+      glEnd();
+    }
+  }
+  glPopMatrix();
   glutSwapBuffers();
 }
 
@@ -86,7 +106,40 @@ void reshape(int w, int h){
 void idle(){
   usleep(16 * 1000);
   glutPostRedisplay();
+}
 
+void mouse(int button, int state, int x, int y){
+  CInput& input = CInput::instance();
+
+  if(state == GLUT_DOWN){
+
+    switch(button){
+    case GLUT_MIDDLE_BUTTON:
+      CInput::middle = true;
+      break;
+    case GLUT_LEFT_BUTTON:
+      CInput::left = true;
+      break;
+    }
+    input.mousedown(x,y);
+  }
+
+  if(state == GLUT_UP){
+    input.mouseup();  
+    switch(button){
+    case GLUT_MIDDLE_BUTTON:
+      CInput::middle = false;
+      break;
+    case GLUT_LEFT_BUTTON:
+      CInput::left = false;
+      break;
+    }
+  }  
+}
+
+static void motion(int x, int y){
+  CInput::nowmousepos.x = x;
+  CInput::nowmousepos.y = y;
 }
 
 int main(int argv, char* argc[]){

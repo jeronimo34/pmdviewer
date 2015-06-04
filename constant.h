@@ -11,6 +11,7 @@
 #define WORD unsigned short //2byte
 #define BYTE unsigned char //1byte
 
+#define PI 3.141592655359
 
 #define SAFE_DELETE(ptr) {if((ptr)){ delete (ptr); (ptr) = NULL;}}
 #define SAFE_DELETE_ARRAY(ptr) {if((ptr)){ delete[] (ptr); (ptr) = NULL;}}

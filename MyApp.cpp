@@ -16,7 +16,7 @@ CMyApp::CMyApp(){
   }
   #endif
 
-  CPMDLoader *pmdloader = new CPMDLoader("../resource/cirno.pmd");
+  CPMDLoader *pmdloader = new CPMDLoader("../resource/miku.pmd");
   CVmdLoader *vmdloader = new CVmdLoader("nya.vmd");
 
   CMotionManager& inst = CMotionManager::instance();

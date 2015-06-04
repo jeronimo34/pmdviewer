@@ -152,7 +152,16 @@ class CPmdMesh : public CMesh{
   WORD getIkNum() const {
     return m_ikNum;
   }
-
+  //morph
+  WORD getMorphNum() const {
+    return m_morphNum;
+  }
+  MmdStruct::PmdMorph *getPmdMorph() const {
+    return m_pmdMorph;
+  }
+  MmdStruct::PmdVertex *getPmdVertex() const {
+    return m_pVertex;
+  }
 };
 
 #endif

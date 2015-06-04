@@ -43,6 +43,7 @@ CVmdLoader::CVmdLoader(const char* filename){
     ifs.read((char*)&v.skinName, 15);
     ifs.read((char*)&v.flameNo, sizeof(DWORD));
     ifs.read((char*)&v.weight, sizeof(float));
+    m_vmdMorphs[i] = v;
   }
   
   ifs.close();

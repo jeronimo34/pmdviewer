@@ -133,31 +133,40 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
   //debug
   glUseProgram(0);
 
-
-  //WAKAME☆
   //morph test
+  double mindex = 10000;
   for(int i = 0; i < m_morphNum; ++i){
-    //    cout << "\n" << i << " "<< m_pmdMorph[i].skin_name << endl;
-    if(i == 15){
-      //お　という。
+
+    if(i == 0 || i == 17){
+    cout << "\n" << i << " "<< m_pmdMorph[i].skin_name << endl;
     cout << i << " " << m_pmdMorph[i].skin_vert_count << endl;
       for(int j = 0; j < m_pmdMorph[i].skin_vert_count; ++j){
+	//i == 0 base no bangou
+	//else base no bangou
 	int index = m_pmdMorph[i].skin_data[j].skin_vert_index;
-	cout << "index : "<< index << endl;
-	m_pVertex[index].pos[0] += m_pmdMorph[i].skin_data[j].skin_vert_pos[0];
-	m_pVertex[index].pos[1] += m_pmdMorph[i].skin_data[j].skin_vert_pos[1];
-	m_pVertex[index].pos[2] += m_pmdMorph[i].skin_data[j].skin_vert_pos[2];
-
+	
+	if(i == 0){
+	  m_pVertex[index].pos[0] = m_pmdMorph[i].skin_data[j].skin_vert_pos[0];
+	  m_pVertex[index].pos[1] = m_pmdMorph[i].skin_data[j].skin_vert_pos[1];
+	  m_pVertex[index].pos[2] = m_pmdMorph[i].skin_data[j].skin_vert_pos[2];
+	}
+	else {
+	  index = m_pmdMorph[0].skin_data[index].skin_vert_index;
+	  m_pVertex[index].pos[0] += m_pmdMorph[i].skin_data[j].skin_vert_pos[0];
+	  m_pVertex[index].pos[1] += m_pmdMorph[i].skin_data[j].skin_vert_pos[1];
+	  m_pVertex[index].pos[2] += m_pmdMorph[i].skin_data[j].skin_vert_pos[2];
+	}
 	m_v.push_back(
 		      CVector3(m_pVertex[index].pos[0],
 			       m_pVertex[index].pos[1],
 			       m_pVertex[index].pos[2]
 			       )
 		      );
-
+	/*
 	cout << m_pmdMorph[i].skin_data[j].skin_vert_pos[0] << " "
 	     << m_pmdMorph[i].skin_data[j].skin_vert_pos[1] << " "
 	     << m_pmdMorph[i].skin_data[j].skin_vert_pos[2] << endl;
+	*/
       }
     }
   }
@@ -210,7 +219,6 @@ void CPmdMesh::copyPmdMorph(MmdStruct::PmdMorph **out, const MmdStruct::PmdMorph
 
     cout << "skin vert count : " << in[i].skin_vert_count << endl;
     for(DWORD j = 0; j < in[i].skin_vert_count; ++j){
-
       (*out)[i].skin_data[j].skin_vert_index =  in[i].skin_data[j].skin_vert_index;
       (*out)[i].skin_data[j].skin_vert_pos[0] = in[i].skin_data[j].skin_vert_pos[0];
       (*out)[i].skin_data[j].skin_vert_pos[1] = in[i].skin_data[j].skin_vert_pos[1];
@@ -249,40 +257,24 @@ void CPmdMesh::AnimationUpdate(float dt){
 
   CMotionManager& inst = CMotionManager::instance();
   //現在の姿勢に更新
-  //  inst.getAttribute(0, m_flame, *this);
-#if 0
-  for(int i = 0; i < m_morphNum; ++i){
-    if(m_pmdMorph[i].skin_type == 0){
-      for(int j = 0; j < m_pmdMorph[i].skin_vert_count; ++j){
-
-      }
-    }
-  }
-#endif
-  for(int i = 0; i < m_boneNum; ++i){
-    //    m_pB[i].boneMat = m_pB[i].initMat * m_pDefMat[i];
+  inst.getAttributeMorph(0,m_flame,*this);
+  inst.getAttribute(0, m_flame, *this);
+  for(WORD i = 0; i < m_boneNum; ++i){
     m_pB[i].boneMat = m_pB[i].initMat * m_pDefMat[i];
   }
-  //  inst.getAttributeIK(*this);
+  inst.getAttributeIK(*this);
 
 }
 
 void CPmdMesh::render(){
-
-  static double angle = 0.0f;
   //3 tyouten
   //float 
-  //  angle += 1.0;
   //  cout << angle << endl;
-  //  glTranslatef(0, 0, -10);
-  //glRotated(angle, 0, 1, 0);
+  //  glTranslatef(0, 0, 8);
+  //  glRotated(angle, 0, 1, 0);
   //  glMultMatrixd(Mat4RotatedX(angle).m);
   //  CMotionManager& inst = CMotionManager::instance();
   //  if(angle >= 40)angle = 0;
-
-
-  static double pp = PI/180.0;
-
   //worldviewprojを取得
   CMatrix4 world;
 
@@ -322,10 +314,6 @@ void CPmdMesh::render(){
     }
   }
 
-  //転置行列にする必要がある。
-  //3番目をGL_TRUEすると転置してくれる。
-  //(AB)T = (B)T(A)Tよりとりあえず逆にかけておいて転置することで正しい順番に直している。
-  //順番通りにかける場合はすべての行列演算にたいして転置行列を使用する必要がある。
   glUniformMatrix4fv(m_uniform_defMat, m_boneNum, GL_FALSE, m);//koko
   //  glUniformMatrix4fv(m_uniform_defMat, 1, GL_FALSE, m);
 
@@ -359,18 +347,6 @@ void CPmdMesh::render(){
     from += size ;
   }
 
-#if 0
-  glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, red);
-    glPointSize(5);
-    glBegin(GL_POINTS);
-
-    for(DWORD i = 0; i < m_vertexNum; ++i)
-      glArrayElement(i);
-    glEnd();
-#endif
-
-
-
   //  glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,red);
   glDisableClientState(GL_NORMAL_ARRAY);  
   glDisableClientState(GL_VERTEX_ARRAY);
@@ -382,35 +358,5 @@ void CPmdMesh::render(){
   int index = 0;
   float red[] = {1,0,0,1};
   float blue[] = {0,0,1,1};
-#if 0
-  for(int i = 0; i < m_boneNum; ++i){
-    index = m_pBone[i].tail_pos_bone_index;
-    if(index != 0){
-
-      glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,red);
-      //      glPointSize(5.0);
-
-      glColor3f(1,0,0);
-      glBegin(GL_POINTS);
-      glVertex3f(m_pBone[i].bone_head_pos[0],
-		 m_pBone[i].bone_head_pos[1],
-		 m_pBone[i].bone_head_pos[2]
-		 );
-      glEnd();
-    }
-  }
-#endif 
-  for(int i = 0; i < m_v.size(); ++i){
-      glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,red);
-      //      glPointSize(5.0);
-      glColor3f(1,0,0);
-      glBegin(GL_POINTS);
-      glVertex3f(m_v[i].x,
-		 m_v[i].y,
-		 m_v[i].z);
-
-      glEnd();
-  }
-
 }
 

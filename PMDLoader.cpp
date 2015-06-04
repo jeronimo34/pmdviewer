@@ -172,9 +172,9 @@ CPMDLoader::CPMDLoader(const char* fname)
 
     ifs.read((char*)&m->skin_vert_count, sizeof(DWORD));
     ifs.read((char*)&m->skin_type, sizeof(BYTE));
-    
+
     m->skin_data = new MmdStruct::PmdSkinVertData[m->skin_vert_count];
-    for(int j = 0; j < m->skin_vert_count; ++j){
+    for(WORD j = 0; j < m->skin_vert_count; ++j){
       MmdStruct::PmdSkinVertData *mm = &m->skin_data[j];
       ifs.read((char*)&mm->skin_vert_index,sizeof(DWORD));
       ifs.read((char*)&mm->skin_vert_pos[0],sizeof(float)*3);

@@ -1,11 +1,14 @@
 #include "vector3.h"
-
+#include <iostream>
+using namespace std;
 
   //a * v
 CVector3 operator * (const float a, const CVector3& v){
     return CVector3(a * v.x, a * v.y, a * v.z);
 }
-
+void CVector3::print(){
+  cout << "x : " << x << " y : " << y << " z : " << z << endl;
+}
 //mat4
 CMatrix4 Mat4Translated(double x, double y, double z){
   CMatrix4 t;

@@ -8,6 +8,9 @@
 #include "../VECTOR3/vector3.h"
 
 #include <map>
+#include <vector>
+
+using namespace std;
 
 const char SKINMESH_VERT[] = "skinmesh.vert";
 const char SKINMESH_FRAG[] = "skinmesh.frag";
@@ -72,7 +75,12 @@ class CPmdMesh : public CMesh{
   WORD m_ikNum;
   MmdStruct::PmdIK *m_pIK;
 
-  void copyPmdIK(MmdStruct::PmdIK *out, const MmdStruct::PmdIK *in);
+  void copyPmdIK(MmdStruct::PmdIK **out, const MmdStruct::PmdIK *in);
+
+  //morph
+  DWORD m_morphNum;
+  MmdStruct::PmdMorph *m_pmdMorph;
+  void copyPmdMorph(MmdStruct::PmdMorph **out, const MmdStruct::PmdMorph *in);
 
   //skinmesh
   Bone *m_pB;//bone
@@ -85,11 +93,44 @@ class CPmdMesh : public CMesh{
   void print(CMatrix4* m);
   //現在の姿勢を保持する。
   CMatrix4 *m_pDefMat;
+
+  //animation
+  float m_flame;
+  float m_startflame;
+  float m_lastflame;
+  bool m_repeat;
+  float m_dt;
+  bool m_animation;
+
+  //debug
+  vector<CVector3> m_v;
+
  public:
 
   CPmdMesh(CPMDLoader* loader);
   virtual ~CPmdMesh();
   virtual void render();
+
+  void AnimationStart(){
+    m_animation = true;
+  }
+  
+  void AnimationStop(){
+    m_animation = false;
+  }
+
+  void AnimationReset(){
+    m_flame = 0;
+  }
+
+  void SetAnimationSpeed(float speed){
+    m_dt = speed;
+  }
+  
+  void SetAnimationRepeat(bool rep){
+    m_repeat = rep;
+  }
+  void AnimationUpdate(float dt);
 
   Bone *bone() const {
     return m_pB;
@@ -105,10 +146,8 @@ class CPmdMesh : public CMesh{
   }
 
   MmdStruct::PmdIK *getIkData()const{
-
     return m_pIK;
   }
-
 
   WORD getIkNum() const {
     return m_ikNum;
