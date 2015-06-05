@@ -36,8 +36,11 @@ class CMotionManager {
   static int m_motionNum;
 
   //ボーンそれぞれのキーフレームを取得 pair  フレーム番号 motionの位置
+
   map<string, vector< pair<int, int> > > m_Bonemap;
+  
   //IK
+  
   int m_lastframe;
 
   map< int, vector<VmdMorph> > m_Morphs;

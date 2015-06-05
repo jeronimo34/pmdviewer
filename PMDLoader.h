@@ -4,126 +4,161 @@
 #include <string.h>
 
 namespace MmdStruct{
-#pragma pack(1)
-	struct PmdHeader{
-		char magic[3]; // "Pmd"
-		float version; // 00 00 80 3F == 1.00 // ’ù³‚µ‚Ü‚µ‚½BƒRƒƒ“ƒg‚ ‚è‚ª‚Æ‚¤‚²‚´‚¢‚Ü‚·
-		char model_name[20];
-		char comment[256];
-	};
 
-	struct PmdVertex{
-		float pos[3]; // x, y, z // À•W
-		float normal_vec[3]; // nx, ny, nz // –@üƒxƒNƒgƒ‹
-		float uv[2]; // u, v // UVÀ•W // MMD‚Í’¸“_UV
-		WORD bone_num[2]; // ƒ{[ƒ“”Ô†1A”Ô†2 // ƒ‚ƒfƒ‹•ÏŒ`(’¸“_ˆÚ“®)‚É‰e‹¿
-		BYTE bone_weight; // ƒ{[ƒ“1‚É—^‚¦‚é‰e‹¿“x // min:0 max:100 // ƒ{[ƒ“2‚Ö‚Ì‰e‹¿“x‚ÍA(100 - bone_weight)
-		BYTE edge_flag; // 0:’ÊíA1:ƒGƒbƒW–³Œø // ƒGƒbƒW(—ÖŠs)‚ª—LŒø‚Ìê‡
-	};
+	// #pragma pack(1)
 
-	struct PmdMaterial{
-		float diffuse_color[3]; // dr, dg, db // Œ¸ŠF
-		float alpha; // Œ¸ŠF‚Ì•s“§–¾“x
-		float specularity;
-		float specular_color[3]; // sr, sg, sb // Œõ‘òF
-		float mirror_color[3]; // mr, mg, mb // ŠÂ‹«F(ambient)
-		BYTE toon_index; // toon??.bmp // 0.bmp:0xFF, 1(01).bmp:0x00 EEE 10.bmp:0x09
-		BYTE edge_flag; // —ÖŠsA‰e
-		DWORD face_vert_count; // –Ê’¸“_” // –Ê”‚Å‚Í‚ ‚è‚Ü‚¹‚ñB‚±‚ÌŞ¿‚Åg‚¤A–Ê’¸“_ƒŠƒXƒg‚Ìƒf[ƒ^”‚Å‚·B
-		char texture_file_name[20]; // ƒeƒNƒXƒ`ƒƒƒtƒ@ƒCƒ‹–¼‚Ü‚½‚ÍƒXƒtƒBƒAƒtƒ@ƒCƒ‹–¼ // 
-	};
+  struct PmdHeader{
+    char magic[3]; // "Pmd"
+    
+	float version; // 00 00 80 3F == 1.00 // è¨‚æ­£ã—ã¾ã—ãŸã€‚ã‚³ãƒ¡ãƒ³ãƒˆã‚ã‚ŠãŒã¨ã†ã”ã–ã„ã¾ã™
 
-	struct PmdBone{
-		char bone_name[20]; // ƒ{[ƒ“–¼
-		WORD parent_bone_index; // eƒ{[ƒ“”Ô†(‚È‚¢ê‡‚Í0xFFFF)
-		WORD tail_pos_bone_index; // tailˆÊ’u‚Ìƒ{[ƒ“”Ô†(ƒ`ƒF[ƒ“––’[‚Ìê‡‚Í0xFFFF 0 ¨•â‘«2) // eFq‚Í1F‘½‚È‚Ì‚ÅAå‚ÉˆÊ’uŒˆ‚ß—p
-		BYTE bone_type; // ƒ{[ƒ“‚Ìí—Ş
-		WORD ik_parent_bone_index; // IKƒ{[ƒ“”Ô†(‰e‹¿IKƒ{[ƒ“B‚È‚¢ê‡‚Í0)
-		float bone_head_pos[3]; // x, y, z // ƒ{[ƒ“‚Ìƒwƒbƒh‚ÌˆÊ’u
-	};
+	char model_name[20];
+    
+	char comment[256];
+  };
 
-	struct PmdIK{
-		WORD ik_bone_index; // IKƒ{[ƒ“”Ô†
-		WORD ik_target_bone_index; // IKƒ^[ƒQƒbƒgƒ{[ƒ“”Ô† // IKƒ{[ƒ“‚ªÅ‰‚ÉÚ‘±‚·‚éƒ{[ƒ“
-		BYTE ik_chain_length; // IKƒ`ƒF[ƒ“‚Ì’·‚³(q‚Ì”)
-		WORD iterations; // Ä‹A‰‰Z‰ñ” // IK’l1
-		float control_weight; // ‰‰Z1‰ñ‚ ‚½‚è‚Ì§ŒÀŠp“x // IK’l2
-		WORD *ik_child_bone_index; // IK‰e‹¿‰º‚Ìƒ{[ƒ“”Ô†
-	};
-	struct PmdSkinVertData{
-		DWORD skin_vert_index;
-		float skin_vert_pos[3];
-	};
+  struct PmdVertex{
+	 
+    float pos[3]; // x, y, z // è ï½§è®“ãƒ»	
 
-	struct PmdMorph{
-		char skin_name[20]; //@•\î–¼
-		DWORD skin_vert_count; // •\î—p‚Ì’¸“_”
-		BYTE skin_type; // •\î‚Ìí—Ş // 0FbaseA1F‚Ü‚äA2F–ÚA3FƒŠƒbƒvA4F‚»‚Ì‘¼
-		PmdSkinVertData *skin_data;
-	};
+	float normal_vec[3]; // nx, ny, nz // è±•æ…•ï½·å£¹ãƒ»ç¹§ï½¯ç¹åŒ»Î
+    
+	float uv[2]; // u, v // UVè ï½§è®“ãƒ»// MMDç¸ºï½¯é¬†ã‚‰ã›UV
+	
+	WORD bone_num[2]; // ç¹æ‡Šãƒ»ç¹ï½³é€¡ï½ªèœ¿ï½·1ç¸²âˆ«åˆ†èœ¿ï½·2 // ç¹ï½¢ç¹ãƒ»ÎèŸç‰™ï½½ï½¢(é¬†ã‚‰ã›é˜ï½»èœãƒ»è­ã‚…â†“è –ï½±é«»ï½¿
+	
+	BYTE bone_weight; // ç¹æ‡Šãƒ»ç¹ï½³1ç¸ºï½«è³å¼±âˆ´ç¹§å¥ï½½ï½±é«»ï½¿è ï½¦ // min:0 max:100 // ç¹æ‡Šãƒ»ç¹ï½³2ç¸ºï½¸ç¸ºï½®è –ï½±é«»ï½¿è ï½¦ç¸ºï½¯ç¸²ãƒ»100 - bone_weight)
+	
+	BYTE edge_flag;
 
-#pragma pack()
+	// 0:é¨¾å£¼ï½¸ï½¸ç¸²ãƒ»:ç¹§ï½¨ç¹ãƒ»ãšè¾Ÿï½¡èœ‰ï½¹ // ç¹§ï½¨ç¹ãƒ»ãš(éœˆï½ªé©›ï½­)ç¸ºæ¢§æ€èœ‰ï½¹ç¸ºï½®è£ï½´
+  };
+
+  struct PmdMaterial{
+    float diffuse_color[3]; // dr, dg, db // æ¸›è¡°è‰²
+    
+	float alpha; // æ¸›è¡°è‰²ã®ä¸é€æ˜åº¦
+	
+	float specularity;
+    
+	float specular_color[3]; // sr, sg, sb // å…‰æ²¢è‰²
+    
+	float mirror_color[3]; // mr, mg, mb // ç’°å¢ƒè‰²(ambient)
+    
+	BYTE toon_index; // toon??.bmp // 0.bmp:0xFF, 1(01).bmp:0x00 ãƒ»ãƒ»ãƒ» 10.bmp:0x09
+    
+	BYTE edge_flag; // è¼ªéƒ­ã€å½±
+    
+	DWORD face_vert_count; // é¢é ‚ç‚¹æ•° // é¢æ•°ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚ã“ã®æè³ªã§ä½¿ã†ã€é¢é ‚ç‚¹ãƒªã‚¹ãƒˆã®ãƒ‡ãƒ¼ã‚¿æ•°ã§ã™ã€‚
+
+	char texture_file_name[20]; // ãƒ†ã‚¯ã‚¹ãƒãƒ£ãƒ•ã‚¡ã‚¤ãƒ«åã¾ãŸã¯ã‚¹ãƒ•ã‚£ã‚¢ãƒ•ã‚¡ã‚¤ãƒ«å // 
+  };
+
+  struct PmdBone{
+    char bone_name[20]; // ãƒœãƒ¼ãƒ³å
+  
+	WORD parent_bone_index; // è¦ªãƒœãƒ¼ãƒ³ç•ªå·(ãªã„å ´åˆã¯0xFFFF)
+
+    WORD tail_pos_bone_index; // tailä½ç½®ã®ãƒœãƒ¼ãƒ³ç•ªå·(ãƒã‚§ãƒ¼ãƒ³æœ«ç«¯ã®å ´åˆã¯0xFFFF 0 â†’è£œè¶³2) // è¦ªï¼šå­ã¯1ï¼šå¤šãªã®ã§ã€ä¸»ã«ä½ç½®æ±ºã‚ç”¨
+    
+	BYTE bone_type; // ãƒœãƒ¼ãƒ³ã®ç¨®é¡
+    
+	WORD ik_parent_bone_index; // IKãƒœãƒ¼ãƒ³ç•ªå·(å½±éŸ¿IKãƒœãƒ¼ãƒ³ã€‚ãªã„å ´åˆã¯0)
+    
+	float bone_head_pos[3]; // x, y, z // ãƒœãƒ¼ãƒ³ã®ãƒ˜ãƒƒãƒ‰ã®ä½ç½®
+  
+  };
+
+  struct PmdIK{
+    WORD ik_bone_index; // IKãƒœãƒ¼ãƒ³ç•ªå·
+    WORD ik_target_bone_index; // IKã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒœãƒ¼ãƒ³ç•ªå· // IKãƒœãƒ¼ãƒ³ãŒæœ€åˆã«æ¥ç¶šã™ã‚‹ãƒœãƒ¼ãƒ³
+    BYTE ik_chain_length; // IKãƒã‚§ãƒ¼ãƒ³ã®é•·ã•(å­ã®æ•°)
+    WORD iterations; // å†å¸°æ¼”ç®—å›æ•° // IKå€¤1
+    float control_weight; // æ¼”ç®—1å›ã‚ãŸã‚Šã®åˆ¶é™è§’åº¦ // IKå€¤2
+    WORD *ik_child_bone_index; // IKå½±éŸ¿ä¸‹ã®ãƒœãƒ¼ãƒ³ç•ªå·
+  };
+  struct PmdSkinVertData{
+    DWORD skin_vert_index;
+    float skin_vert_pos[3];
+  };
+
+  struct PmdMorph{
+    char skin_name[20]; //ç¸²Â€é™¦ï½¨è« ãƒ»éŒ
+    
+	DWORD skin_vert_count; // é™¦ï½¨è« ãƒ»ç•‘ç¸ºï½®é¬†ã‚‰ã›è¬¨ï½°
+    
+	BYTE skin_type;
+	
+	PmdSkinVertData *skin_data;
+  };
+#if 0
+#endif
+
+  //#pragma pack()
+
 }
 
 class CPMDLoader{
-private:
-	//vertex
-	DWORD m_vertexNum;
-	MmdStruct::PmdVertex *m_pVertex;
-	//face
-	DWORD m_faceNum;//subeteno men no tyouten no goukei
-	WORD* m_pFaceIndex;
+ private:
+  //vertex
+  DWORD m_vertexNum;
+  MmdStruct::PmdVertex *m_pVertex;  
+  //face
+  DWORD m_faceNum;//subeteno men no tyouten no goukei
+  WORD* m_pFaceIndex;
+  
+  //material
+  DWORD m_materialNum;
+  MmdStruct::PmdMaterial *m_pMaterial;
+  
+  //bone
+  WORD m_boneNum;
+  MmdStruct::PmdBone *m_pBone;
 
-	//material
-	DWORD m_materialNum;
-	MmdStruct::PmdMaterial *m_pMaterial;
+  WORD m_ikNum; // IKãƒ‡ãƒ¼ã‚¿æ•°
 
-	//bone
-	WORD m_boneNum;
-	MmdStruct::PmdBone *m_pBone;
+  MmdStruct::PmdIK *m_pIK;
 
-	WORD m_ikNum; // IKƒf[ƒ^”
-	MmdStruct::PmdIK *m_pIK;
+  //è¡¨æƒ…ãƒªã‚¹ãƒˆ
+  
+  WORD m_skinNum;
+  MmdStruct::PmdMorph *m_pMorph;
 
-	//•\îƒŠƒXƒg
-	WORD m_skinNum;
-	MmdStruct::PmdMorph *m_pMorph;
+ public:
+  CPMDLoader(const char* fname);
+  ~CPMDLoader();
 
-public:
-	CPMDLoader(const char* fname);
-	~CPMDLoader();
+  DWORD getVertexNum(){return m_vertexNum;}
+  void getPmdVertex(MmdStruct::PmdVertex* out){
+    memcpy(out, m_pVertex, sizeof(MmdStruct::PmdVertex) * m_vertexNum);
+  }
 
-	DWORD getVertexNum(){ return m_vertexNum; }
-	void getPmdVertex(MmdStruct::PmdVertex* out){
-		memcpy(out, m_pVertex, sizeof(MmdStruct::PmdVertex) * m_vertexNum);
-	}
+  DWORD getFaceNum(){return m_faceNum;}
+  void getFaceIndex(WORD* out){
+    memcpy(out, m_pFaceIndex, sizeof(WORD) * m_faceNum);
+  }
 
-	DWORD getFaceNum(){ return m_faceNum; }
-	void getFaceIndex(WORD* out){
-		memcpy(out, m_pFaceIndex, sizeof(WORD) * m_faceNum);
-	}
+  DWORD getMaterialNum(){return m_materialNum;}
+  void getPmdMaterial(MmdStruct::PmdMaterial* out){
+    memcpy(out, m_pMaterial, sizeof(MmdStruct::PmdMaterial) * m_materialNum);
+  }
 
-	DWORD getMaterialNum(){ return m_materialNum; }
-	void getPmdMaterial(MmdStruct::PmdMaterial* out){
-		memcpy(out, m_pMaterial, sizeof(MmdStruct::PmdMaterial) * m_materialNum);
-	}
-
-	DWORD getBoneNum() const { return m_boneNum; }
-	void getPmdBone(MmdStruct::PmdBone *out){
-		memcpy(out, m_pBone, sizeof(MmdStruct::PmdBone) * m_boneNum);
-	}
-	WORD getIKNum() const {
-		return m_ikNum;
-	}
-	MmdStruct::PmdIK *getPmdIK() const {
-		return m_pIK;
-	}
-
-	WORD getMorphNum() const {
-		return m_skinNum;
-	}
-
-	MmdStruct::PmdMorph *getPmdMorph() const {
-		return m_pMorph;
-	}
+  DWORD getBoneNum() const {return m_boneNum;}
+  void getPmdBone(MmdStruct::PmdBone *out){
+    memcpy(out, m_pBone, sizeof(MmdStruct::PmdBone) * m_boneNum);
+  }
+  WORD getIKNum() const {
+    return m_ikNum;
+  }
+  MmdStruct::PmdIK *getPmdIK() const {
+    return m_pIK;
+  }
+  
+  WORD getMorphNum() const {
+    return m_skinNum;
+  }
+  
+  MmdStruct::PmdMorph *getPmdMorph() const {
+    return m_pMorph;
+  }
 };
