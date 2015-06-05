@@ -3,13 +3,13 @@
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #define DWORD int
-#else
-#include <GL/glut.h>
-#define DWORD unsigned long
-#endif
-
 #define WORD unsigned short //2byte
 #define BYTE unsigned char //1byte
+#else
+#include <Windows.h>
+#include <GL/glut.h>
+#endif
+
 
 
 #define SAFE_DELETE(ptr) {if((ptr)){ delete (ptr); (ptr) = NULL;}}

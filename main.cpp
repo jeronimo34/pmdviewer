@@ -1,9 +1,13 @@
+
 #include <cstdio>
 #include <iostream>
 #include <ostream>
 #include <fstream>
+
+#ifdef __APPLE__
 #include <unistd.h>
-#include <iconv.h>
+#endif
+
 #include "MyApp.h"
 #include "PMDLoader.h"
 
@@ -84,7 +88,10 @@ void reshape(int w, int h){
 }
 
 void idle(){
+#ifdef __APPLE__
   usleep(16 * 1000);
+#endif
+  Sleep(16);
   glutPostRedisplay();
 
 }

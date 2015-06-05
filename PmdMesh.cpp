@@ -65,10 +65,10 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
 
   for(DWORD i = 1; i < m_boneNum; ++i){
     //親がいなかったら0番を親にする。
+
     if(m_pBone[i].parent_bone_index == 0xFFFF){
       index = 0;
-    }
-    else {
+	}else{
       index = m_pBone[i].parent_bone_index;
     }
 
@@ -315,7 +315,8 @@ void CPmdMesh::render(){
   glVertexPointer(3, GL_FLOAT,sizeof(MmdStruct::PmdVertex),m_pVertex);  
   glNormalPointer(GL_FLOAT,sizeof(MmdStruct::PmdVertex),
 		  &m_pVertex[0].normal_vec[0]);
-  float m[16 * m_boneNum];
+  const int Size = 16 * m_boneNum;
+  float m[Size];
   for(int i = 0; i < m_boneNum; ++i){
     for(int j =0; j < 16; ++j){
       m[i*16 + j] = m_pCombMat[i].m[j];

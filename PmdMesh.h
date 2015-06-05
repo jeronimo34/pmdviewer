@@ -5,7 +5,7 @@
 #include "constant.h"
 #include "Mesh.h"
 #include "PMDLoader.h"
-#include "../VECTOR3/vector3.h"
+#include "vector3.h"
 
 #include <map>
 #include <vector>
@@ -92,6 +92,7 @@ class CPmdMesh : public CMesh{
 
   void print(CMatrix4* m);
   //現在の姿勢を保持する。
+
   CMatrix4 *m_pDefMat;
 
   //animation

@@ -4,7 +4,8 @@
 #include <string.h>
 
 namespace MmdStruct{
-  #pragma pack(1)
+ // #pragma pack(1)
+
   struct PmdHeader{
     char magic[3]; // "Pmd"
     float version; // 00 00 80 3F == 1.00 // 訂正しました。コメントありがとうございます
@@ -13,12 +14,18 @@ namespace MmdStruct{
   };
 
   struct PmdVertex{
+	 
     float pos[3]; // x, y, z // 座標
+	
     float normal_vec[3]; // nx, ny, nz // 法線ベクトル
     float uv[2]; // u, v // UV座標 // MMDは頂点UV
-    WORD bone_num[2]; // ボーン番号1、番号2 // モデル変形(頂点移動)時に影響
-    BYTE bone_weight; // ボーン1に与える影響度 // min:0 max:100 // ボーン2への影響度は、(100 - bone_weight)
-    BYTE edge_flag; // 0:通常、1:エッジ無効 // エッジ(輪郭)が有効の場合
+	
+	WORD bone_num[2]; // ボーン番号1、番号2 // モデル変形(頂点移動)時に影響
+	
+	BYTE bone_weight; // ボーン1に与える影響度 // min:0 max:100 // ボーン2への影響度は、(100 - bone_weight)
+	
+	BYTE edge_flag;
+	// 0:通常、1:エッジ無効 // エッジ(輪郭)が有効の場
   };
 
   struct PmdMaterial{
@@ -58,11 +65,12 @@ namespace MmdStruct{
   struct PmdMorph{
     char skin_name[20]; //　表情名
     DWORD skin_vert_count; // 表情用の頂点数
-    BYTE skin_type; // 表情の種類 // 0：base、1：まゆ、2：目、3：リップ、4：その他
-    PmdSkinVertData *skin_data;
+    BYTE skin_type;
+	PmdSkinVertData *skin_data;
   };
-
-  #pragma pack()
+#if 0
+#endif
+  //#pragma pack()
 }
 
 class CPMDLoader{
@@ -85,7 +93,6 @@ class CPMDLoader{
   WORD m_ikNum; // IKデータ数
   MmdStruct::PmdIK *m_pIK;
 
-  //表情リスト
   WORD m_skinNum;
   MmdStruct::PmdMorph *m_pMorph;
 
