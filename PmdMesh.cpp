@@ -8,6 +8,8 @@
 using namespace std;
 
 CPmdMesh::CPmdMesh(CPMDLoader* loader){
+	m_flame = 0;
+
   m_vertexNum = loader->getVertexNum();
   m_pVertex = new MmdStruct::PmdVertex[m_vertexNum];
   loader->getPmdVertex(m_pVertex);
@@ -65,10 +67,10 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
 
   for(DWORD i = 1; i < m_boneNum; ++i){
     //親がいなかったら0番を親にする。
+
     if(m_pBone[i].parent_bone_index == 0xFFFF){
       index = 0;
-    }
-    else {
+	}else{
       index = m_pBone[i].parent_bone_index;
     }
 
@@ -106,6 +108,7 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
 
   // 初期姿勢を親の姿勢からの相対姿勢に直します。
   // まず子の末端まで下りて、自分のローカル空間での初期姿勢 × 親のボーンオフセット行列で相対姿勢が出ます
+ 
   struct CalcRelativeMat {
     static void run(Bone* me, CMatrix4 *parentoffsetMat) {
       if (me->firstChild)
@@ -116,14 +119,17 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
 	me->initMat =   (*parentoffsetMat) * me->initMat;//koko
     }
   };
+
   CalcRelativeMat::run(&m_pB[0], 0);
 
   //ローカル姿勢にする。
+
   for(int i = 0; i < m_boneNum; ++i){
     m_pB[i].boneMat = m_pB[i].initMat;
   }
 
   //shader
+  
   CGLSL prog;
   m_skinshader = prog.makeProgram("simple.vert", "simple.frag");
   m_uniform_defMat = glGetUniformLocation(m_skinshader,"defMat");
@@ -131,9 +137,11 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
   m_attribute_boneWeight = glGetAttribLocation(m_skinshader, "boneW");
 
   //debug
+
   glUseProgram(0);
 
   //morph test
+  
   double mindex = 10000;
   for(int i = 0; i < m_morphNum; ++i){
 
@@ -141,9 +149,11 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
     cout << "\n" << i << " "<< m_pmdMorph[i].skin_name << endl;
     cout << i << " " << m_pmdMorph[i].skin_vert_count << endl;
       for(int j = 0; j < m_pmdMorph[i].skin_vert_count; ++j){
-	//i == 0 base no bangou
+	
+		  //i == 0 base no bangou
 	//else base no bangou
-	int index = m_pmdMorph[i].skin_data[j].skin_vert_index;
+	
+		  int index = m_pmdMorph[i].skin_data[j].skin_vert_index;
 	
 	if(i == 0){
 	  m_pVertex[index].pos[0] = m_pmdMorph[i].skin_data[j].skin_vert_pos[0];
@@ -152,9 +162,9 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
 	}
 	else {
 	  index = m_pmdMorph[0].skin_data[index].skin_vert_index;
-	  m_pVertex[index].pos[0] += m_pmdMorph[i].skin_data[j].skin_vert_pos[0];
-	  m_pVertex[index].pos[1] += m_pmdMorph[i].skin_data[j].skin_vert_pos[1];
-	  m_pVertex[index].pos[2] += m_pmdMorph[i].skin_data[j].skin_vert_pos[2];
+	m_pVertex[index].pos[0] += m_pmdMorph[i].skin_data[j].skin_vert_pos[0];
+	m_pVertex[index].pos[1] += m_pmdMorph[i].skin_data[j].skin_vert_pos[1];
+	m_pVertex[index].pos[2] += m_pmdMorph[i].skin_data[j].skin_vert_pos[2];
 	}
 	m_v.push_back(
 		      CVector3(m_pVertex[index].pos[0],
@@ -167,6 +177,7 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
 	     << m_pmdMorph[i].skin_data[j].skin_vert_pos[1] << " "
 	     << m_pmdMorph[i].skin_data[j].skin_vert_pos[2] << endl;
 	*/
+
       }
     }
   }
@@ -176,6 +187,7 @@ CPmdMesh::CPmdMesh(CPMDLoader* loader){
 
 //debug
 //print
+
 void print(CMatrix4* m){
   for(int i = 0; i < 4; ++i){
     for(int j = 0; j < 4; ++j){
@@ -188,6 +200,7 @@ void print(CMatrix4* m){
 //
 //copyPmdIK
 //
+
 void CPmdMesh::copyPmdIK(MmdStruct::PmdIK **out, const MmdStruct::PmdIK* in){
 
   *out = new MmdStruct::PmdIK[m_ikNum];
@@ -197,7 +210,9 @@ void CPmdMesh::copyPmdIK(MmdStruct::PmdIK **out, const MmdStruct::PmdIK* in){
     (*out)[i].ik_chain_length = in[i].ik_chain_length;
     (*out)[i].iterations = in[i].iterations;
     (*out)[i].control_weight = in[i].control_weight;
-    //NEW
+    
+	//NEW
+
     (*out)[i].ik_child_bone_index = new WORD[in[i].ik_chain_length];
     
     for(int j = 0; j  < in[i].ik_chain_length; ++j){
@@ -205,9 +220,11 @@ void CPmdMesh::copyPmdIK(MmdStruct::PmdIK **out, const MmdStruct::PmdIK* in){
     }
   }
 }
+
 //
 //copyPmdMorph
 //
+
 void CPmdMesh::copyPmdMorph(MmdStruct::PmdMorph **out, const MmdStruct::PmdMorph *in){
 
   *out = new MmdStruct::PmdMorph[m_morphNum];
@@ -230,6 +247,7 @@ void CPmdMesh::copyPmdMorph(MmdStruct::PmdMorph **out, const MmdStruct::PmdMorph
 //
 //destractor
 //
+
 CPmdMesh::~CPmdMesh(){
   SAFE_DELETE_ARRAY(m_pVertex);
   SAFE_DELETE_ARRAY(m_pIndex);
@@ -256,7 +274,9 @@ void CPmdMesh::AnimationUpdate(float dt){
   }
 
   CMotionManager& inst = CMotionManager::instance();
+
   //現在の姿勢に更新
+  
   inst.getAttributeMorph(0,m_flame,*this);
   inst.getAttribute(0, m_flame, *this);
   for(WORD i = 0; i < m_boneNum; ++i){
@@ -267,6 +287,7 @@ void CPmdMesh::AnimationUpdate(float dt){
 }
 
 void CPmdMesh::render(){
+
   //3 tyouten
   //float 
   //  cout << angle << endl;
@@ -276,17 +297,22 @@ void CPmdMesh::render(){
   //  CMotionManager& inst = CMotionManager::instance();
   //  if(angle >= 40)angle = 0;
   //worldviewprojを取得
-  CMatrix4 world;
+
+	CMatrix4 world;
 
   //animation
-  AnimationUpdate(0);
+  
+	AnimationUpdate(0);
 
 
   //  world = Mat4RotatedY(angle);
+
   struct UpdateBone {
     static void run(Bone* me, CMatrix4 *parentWorldMat) {
+
       // count++;
-      me->boneMat = (*parentWorldMat) * me->boneMat;//koko 
+      
+		me->boneMat = (*parentWorldMat) * me->boneMat;//koko 
       me->combMatAry[me->id] =  me->boneMat * me->offsetMat;//koko
       if (me->firstChild)
 	run(me->firstChild, &me->boneMat);
@@ -298,23 +324,27 @@ void CPmdMesh::render(){
 
   //
   //shader begin
+  
   glUseProgram(m_skinshader);
 
   //material
+  
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_NORMAL_ARRAY);  
   
   glVertexPointer(3, GL_FLOAT,sizeof(MmdStruct::PmdVertex),m_pVertex);  
   glNormalPointer(GL_FLOAT,sizeof(MmdStruct::PmdVertex),
 		  &m_pVertex[0].normal_vec[0]);
-  float m[16 * m_boneNum];
+  const int Size = 16 * m_boneNum;
+  float m[1600];
   for(int i = 0; i < m_boneNum; ++i){
     for(int j =0; j < 16; ++j){
       m[i*16 + j] = m_pCombMat[i].m[j];
     }
   }
-
+  //m_boneNum
   glUniformMatrix4fv(m_uniform_defMat, m_boneNum, GL_FALSE, m);//koko
+  
   //  glUniformMatrix4fv(m_uniform_defMat, 1, GL_FALSE, m);
 
   glEnableVertexAttribArray(m_attribute_boneNo);
@@ -348,6 +378,7 @@ void CPmdMesh::render(){
   }
 
   //  glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,red);
+  
   glDisableClientState(GL_NORMAL_ARRAY);  
   glDisableClientState(GL_VERTEX_ARRAY);
 

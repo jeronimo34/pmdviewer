@@ -56,7 +56,6 @@ void glInit(int argc, char** argv){
 
 void display(){
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
   
   glLoadIdentity();
   gluLookAt(0,3,20,

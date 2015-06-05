@@ -5,7 +5,7 @@
 #include "constant.h"
 #include "Mesh.h"
 #include "PMDLoader.h"
-#include "../VECTOR3/vector3.h"
+#include "vector3.h"
 
 #include <map>
 #include <vector>
@@ -83,7 +83,8 @@ class CPmdMesh : public CMesh{
   void copyPmdMorph(MmdStruct::PmdMorph **out, const MmdStruct::PmdMorph *in);
 
   //skinmesh
-  Bone *m_pB;//bone
+
+  Bone *m_pB;
   CMatrix4 *m_pCombMat;
   GLuint m_skinshader;
   GLint m_uniform_defMat;
@@ -92,6 +93,7 @@ class CPmdMesh : public CMesh{
 
   void print(CMatrix4* m);
   //現在の姿勢を保持する。
+
   CMatrix4 *m_pDefMat;
 
   //animation

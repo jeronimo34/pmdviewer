@@ -8,6 +8,7 @@ CMyApp::CMyApp(){
 
   //glutかgl初期設定してからでないとバグリます。
   //appleは初期化不要だそうです。
+
   #ifndef __APPLE__
   cout << "shader init" << endl;
   if(CGLSL::glslInit()){
@@ -16,8 +17,8 @@ CMyApp::CMyApp(){
   }
   #endif
 
-  CPMDLoader *pmdloader = new CPMDLoader("../resource/miku.pmd");
-  CVmdLoader *vmdloader = new CVmdLoader("nya.vmd");
+  CPMDLoader *pmdloader = new CPMDLoader("./resource/tiruno.pmd");
+  CVmdLoader *vmdloader = new CVmdLoader("./resource/nya.vmd");
 
   CMotionManager& inst = CMotionManager::instance();
   inst.registVMDMotion(vmdloader);

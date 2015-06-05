@@ -12,6 +12,7 @@ int CMotionManager::m_motionNum;
 
 CMatrix4* CMotionManager::getAttribute(int motionid, float frame
 				       , const CPmdMesh &mesh){
+
   vector<VmdMotion>& m = m_Motions[motionid];
   int boneNum = mesh.boneNum();
 
@@ -22,12 +23,14 @@ CMatrix4* CMotionManager::getAttribute(int motionid, float frame
   CMatrix4 prevtrans, nexttrans;
   CQuaternion prevr, nextr;
 
+
   for(int i = 0; i < boneNum; ++i){
-    string s = b[i].boneName;
+  
+	string s = b[i].boneName;
     bool flag = true;
 
     if(m_Bonemap.find(s) != m_Bonemap.end()){
-      //      cout << "name : " << s << endl;
+
       //boneNameがモーションの中にある
       p = 0; n = 0; 
       vector< pair<int, int> >& v=m_Bonemap[s];
@@ -44,8 +47,8 @@ CMatrix4* CMotionManager::getAttribute(int motionid, float frame
 
 
       if(v.size() == 1 || flag){
-	prevpos = v[v.size()-1].second;
-	nextpos = v[v.size()-1].second;
+		prevpos = v[v.size()-1].second;
+		nextpos = v[v.size()-1].second;
       }
 
       prevtrans = Mat4Translated(m[prevpos].location[0],
@@ -66,6 +69,7 @@ CMatrix4* CMotionManager::getAttribute(int motionid, float frame
 			  m[nextpos].rotation[1],//y
 			  m[nextpos].rotation[2]//z
 			  );
+
       float s = 0.0;
       if(fabs(n - p) < 0.000000001){
       }else{

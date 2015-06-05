@@ -20,7 +20,9 @@ CPMDLoader::CPMDLoader(const char* fname)
     printf("can not open file\n");
     throw "error";
   }
-
+  ifs.seekg(0, ifstream::end);
+  cout << "file Size = " << ifs.tellg() << endl;
+  
   ifs.seekg(0, ifstream::beg);
   char magic[4];
   ifs.read(magic,sizeof(char)*3);
@@ -50,6 +52,7 @@ CPMDLoader::CPMDLoader(const char* fname)
       printf("\n");
     }
   };
+
 
   char mname[21];
   ifs.read(mname,sizeof(char)*20);
@@ -121,6 +124,7 @@ CPMDLoader::CPMDLoader(const char* fname)
     ifs.read((char*)&m->edge_flag,sizeof(BYTE));
     ifs.read((char*)&m->face_vert_count,sizeof(DWORD));
     ifs.read((char*)&m->texture_file_name, sizeof(char)*20);
+	
 }
 
   ifs.read((char*)&m_boneNum, sizeof(WORD));
@@ -162,9 +166,13 @@ CPMDLoader::CPMDLoader(const char* fname)
   }
 
   //表情リスト
+  cout << sizeof(WORD) << endl;
+  m_skinNum = 0;
   ifs.read((char*)&m_skinNum, sizeof(WORD));
   m_pMorph = new MmdStruct::PmdMorph[m_skinNum];
   
+  cout << ifs.tellg() << endl;
+
   for(int i = 0; i < m_skinNum; ++i){
     MmdStruct::PmdMorph *m = &m_pMorph[i];
     ifs.read(m->skin_name, 20);
