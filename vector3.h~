@@ -127,6 +127,8 @@ class CQuaternion{
 //prototype
 //axis haseikikasareteiru hituyougaarumasu
 CQuaternion makeFromAxis(const double rad, const CVector3& axis);
+//a * s + b * (1-s)
+CQuaternion slerp(const CQuaternion &a, const CQuaternion &b, double s);
 
 class CMatrix4{
  public:

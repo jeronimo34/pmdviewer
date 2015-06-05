@@ -1,0 +1,11 @@
+#pragma once
+
+class CInput{
+ private:
+  
+ public:
+  CInput& instance(){
+    staic Cinput inst;
+    return inst;
+  }
+};

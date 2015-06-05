@@ -55,8 +55,8 @@ void display(){
 
   
   glLoadIdentity();
-  gluLookAt(0,8,50,
-	    0,8,0,
+  gluLookAt(0,3,20,
+	    0,3,0,
 	    0,1,0);
 
   static float lightpos0[] = {0,10,0,1.0};

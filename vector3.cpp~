@@ -61,19 +61,19 @@ CQuaternion makeFromAxis(const double rad, const CVector3& axis)
 		axis.y * sin(rad/2),axis.z * sin(rad/2));
   return Q;
 }
+
 CQuaternion slerp(const CQuaternion &a, const CQuaternion &b, double t){
   CQuaternion Q;
-  double qr = a.w*a.w + a.x*a.x + a.y*a.y + a.z*a.z;
-  double ss  = 1.0 - qr*qr;
+  double qr = a.w*b.w + a.x*b.x + a.y*b.y + a.z*b.z;
+  double ss  = 1.0 - qr*qr, sp;
   
-  if(ss <= 0.0){
+  if(ss <= 0.0 || (sp = sqrt(ss)) == 0.0){
     Q.w = a.w;
     Q.x = a.x;
     Q.y = a.y;
     Q.z = a.z;
   }
   else {
-    double sp = sqrt(ss);
     double ph = acos(qr);
     double pt = ph * t;
     double t1 = sin(pt)/sp;

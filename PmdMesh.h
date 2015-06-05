@@ -5,7 +5,7 @@
 #include "constant.h"
 #include "Mesh.h"
 #include "PMDLoader.h"
-#include "vector3.h"
+#include "../VECTOR3/vector3.h"
 
 #include <map>
 #include <vector>
@@ -92,7 +92,6 @@ class CPmdMesh : public CMesh{
 
   void print(CMatrix4* m);
   //現在の姿勢を保持する。
-
   CMatrix4 *m_pDefMat;
 
   //animation
@@ -153,7 +152,16 @@ class CPmdMesh : public CMesh{
   WORD getIkNum() const {
     return m_ikNum;
   }
-
+  //morph
+  WORD getMorphNum() const {
+    return m_morphNum;
+  }
+  MmdStruct::PmdMorph *getPmdMorph() const {
+    return m_pmdMorph;
+  }
+  MmdStruct::PmdVertex *getPmdVertex() const {
+    return m_pVertex;
+  }
 };
 
 #endif

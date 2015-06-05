@@ -1,10 +1,9 @@
-
 #include "MotionManager.h"
+
 #include <math.h>
 #include <algorithm>
 #include <string>
 #include <set>
-
 
 
 using namespace std;
@@ -45,8 +44,8 @@ CMatrix4* CMotionManager::getAttribute(int motionid, float frame
 
 
       if(v.size() == 1 || flag){
-	prevpos = v[0].second;
-	nextpos = v[0].second;
+	prevpos = v[v.size()-1].second;
+	nextpos = v[v.size()-1].second;
       }
 
       prevtrans = Mat4Translated(m[prevpos].location[0],
@@ -55,16 +54,6 @@ CMatrix4* CMotionManager::getAttribute(int motionid, float frame
       nexttrans = Mat4Translated(m[nextpos].location[0],
 				 m[nextpos].location[1],
 				 m[nextpos].location[2]);//boneの次の姿勢
-      /*
-      cout << "prevlocation" << endl;
-      cout << m[prevpos].location[0] << " " <<
-	m[prevpos].location[1] << " " << 
-	m[prevpos].location[2] << " " << endl;
-      cout << "nextlocation" << endl;
-      cout << m[nextpos].location[0] << " " <<
-	m[nextpos].location[1] << " " << 
-	m[nextpos].location[2] << " " << endl;
-      */
       prevr = CQuaternion(
 			  m[prevpos].rotation[3],//w
 			  m[prevpos].rotation[0],//x
@@ -77,29 +66,14 @@ CMatrix4* CMotionManager::getAttribute(int motionid, float frame
 			  m[nextpos].rotation[1],//y
 			  m[nextpos].rotation[2]//z
 			  );
-      /*
-      cout << "prevrotation" << endl;
-      cout << m[prevpos].rotation[0] << " " <<
-	m[prevpos].rotation[1] << " " << 
-	m[prevpos].rotation[2] << " " << 
-	m[prevpos].rotation[3] << " " << endl;
-
-      cout << "nextrotation" << endl;
-      cout << m[nextpos].rotation[0] << " " <<
-	m[nextpos].rotation[1] << " " << 
-	m[nextpos].rotation[2] << " " << 
-	m[nextpos].rotation[3] << " " << endl;
-      */
-
-      //      cout << "n : "<<n << " p : " << p << endl;
       float s = 0.0;
       if(fabs(n - p) < 0.000000001){
       }else{
-	s = (frame - p)/(n - p);    
+	s = (n - frame)/(n - p);    
       }
 
-      pDef[i] = (prevtrans * (1.0 - s) + nexttrans * s) * 
-	(QuaternionToMatrix(slerp(prevr, nextr, s)));
+      pDef[i] = (prevtrans * s + nexttrans * (1.0 - s)) * 
+	(QuaternionToMatrix(slerp(prevr, nextr, 1.0-s)));
       //      b[i].boneMat = b[i].initMat * pDef[i];
     }
     //モーションの中に一致するボーンがありません
@@ -121,8 +95,6 @@ void CMotionManager::getAttributeIK(const CPmdMesh &mesh)
   for(WORD k = 0; k < ikNum; ++k){
     MmdStruct::PmdIK *data = &ikdata[k];
 
-
-
     for(WORD i = 0; i < data->iterations; ++i){
       for(WORD j = 0; j < data->ik_chain_length; ++j){
 
@@ -131,7 +103,11 @@ void CMotionManager::getAttributeIK(const CPmdMesh &mesh)
 	  = bones[data->ik_target_bone_index].GetModelLocalPosition();
 
 	CVector3 ik = bones[data->ik_bone_index].GetModelLocalPosition();
-
+	/*
+	if(ik.y < 0){
+	  ik.y = 0;
+	}
+	*/
 
 	CMatrix4 tmp = bones[index].GetModelLocalBoneMat();
 	CMatrix4 invCoord = tmp.inverse();
@@ -145,10 +121,15 @@ void CMotionManager::getAttributeIK(const CPmdMesh &mesh)
 	double p = localEffectorDir.dot(localTargetDir);
 	//1 wo koenai youni
 	//	cout << p << endl;
-
+	//角度制限
+	
 	if(p > 1.0 - 1.0e-5f)continue;
 
 	double angle = acos(p);
+	if(fabs(angle) > data->control_weight*PI/180.0 ){
+	  angle = (angle > 0) ? data->control_weight*PI/180.0 : -data->control_weight * PI/180.0;
+	}
+
 	CVector3 axis = localEffectorDir.det(localTargetDir);
 	CMatrix4 rotation = QuaternionToMatrix(
 					       makeFromAxis(angle, axis)
@@ -158,7 +139,65 @@ void CMotionManager::getAttributeIK(const CPmdMesh &mesh)
       }
     }
   }
+}
 
+void CMotionManager::getAttributeMorph(int motionid, float flame,const CPmdMesh &mesh){
+  MmdStruct::PmdMorph *pmdmorph = mesh.getPmdMorph();
+  MmdStruct::PmdVertex *pmdVertex = mesh.getPmdVertex();
+  WORD morphNum = mesh.getMorphNum();
+  //init morph
+  //hyoujou wo base ni suru
+  for(WORD i = 0; i < pmdmorph[0].skin_vert_count; ++i){
+    int index = pmdmorph[0].skin_data[i].skin_vert_index;
+    pmdVertex[index].pos[0] = pmdmorph[0].skin_data[i].skin_vert_pos[0];
+    pmdVertex[index].pos[1] = pmdmorph[0].skin_data[i].skin_vert_pos[1];
+    pmdVertex[index].pos[2] = pmdmorph[0].skin_data[i].skin_vert_pos[2];
+  }
+
+
+  float p = 0;//prevflame
+  float n = 0;//nextflame
+  int prev = 0, next = 0;
+  //  vector<VmdMorph>& morph = m_Morphs[motionid];
+
+  //i > 0 base ha tobasu
+  //wakame
+  for(int i = 1; i < morphNum; ++i){
+    string s = pmdmorph[i].skin_name;
+    bool flag = true;
+
+    if(m_MorphMap.find(s) != m_MorphMap.end()){
+      //motion name ga atta
+      vector<MorphInfo>& v = m_MorphMap[s];
+      for(size_t j = 0; j < v.size()-1; ++j){
+	n = v[j+1].flameNo;
+	if(p <= flame && flame <= n){
+	  prev = j;
+	  next = j+1;
+	  flag = false;
+	  break;
+	}
+	p = n;
+      }
+
+      if(flag){
+	prev = next = 0;
+      }
+      float s = 0.0;
+      if(fabs(n - p) < 0.000000001){
+      }else{
+	s = (n - flame)/(n - p);    
+      }
+
+      for(WORD j = 0; j < pmdmorph[i].skin_vert_count; ++j){
+	int index = pmdmorph[i].skin_data[j].skin_vert_index;
+	index = pmdmorph[0].skin_data[index].skin_vert_index;
+	pmdVertex[index].pos[0] += pmdmorph[i].skin_data[j].skin_vert_pos[0]* (v[prev].weight * s + v[next].weight * (1.0-s));
+	pmdVertex[index].pos[1] += pmdmorph[i].skin_data[j].skin_vert_pos[1]* (v[prev].weight * s + v[next].weight * (1.0-s));
+	pmdVertex[index].pos[2] += pmdmorph[i].skin_data[j].skin_vert_pos[2]* (v[prev].weight * s + v[next].weight * (1.0-s));
+      }
+    }
+  }
 }
 
 static bool convFlame(const VmdMotion& a, const VmdMotion &b){
@@ -180,30 +219,29 @@ void CMotionManager::registVMDMotion(CVmdLoader *loader){
   m_lastframe = 0;
   for(int i = 0; i < (int)m.size(); ++i){
     m_Bonemap[m[i].boneName].push_back( pair<int,int>(m[i].flameNo, i));
-    m_lastframe = max(m_lastframe, m[i].flameNo);    
+    m_lastframe = max((double)m_lastframe, (double)m[i].flameNo);    
   }
 
   //表情データ
-  map< int, vector<VmdMorph> > m_Morphs;
+
   m_Morphs[m_motionNum] = loader->GetMorphs();
   vector<VmdMorph>& mm = m_Morphs[m_motionNum];
-
-  struct MorphInfo{
-    int flameNo;
-    int morphpos;
-    float weight;
-  };
-
-  map<string, vector<MorphInfo> >m_MorphMap;
   sort(mm.begin(), mm.end(), convFlameMorph);  
+
   for(size_t i = 0; i < mm.size(); ++i){
     MorphInfo mi;
     mi.flameNo = mm[i].flameNo;
     mi.morphpos = i;
     mi.weight = mm[i].weight;
-    m_MorphMap[mm[i].skinName].push_back(mi);
-  }
+    string s = mm[i].skinName;
+    m_MorphMap[s].push_back(mi);
 
+    
+    cout << i << " Name : " << s <<
+      "flameNo : " << mm[i].flameNo <<
+      "weight : " << mm[i].weight << endl;
+  }
+  cout << "vmd morph : "<< mm.size() << endl;
   
   m_motionNum++;
 }
